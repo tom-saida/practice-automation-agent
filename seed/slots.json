@@ -1,0 +1,13 @@
+[
+  {"slot_label": "Mon 8:20 AM", "taken": false, "booked_by": "", "booked_at": ""},
+  {"slot_label": "Mon 11:00 AM", "taken": false, "booked_by": "", "booked_at": ""},
+  {"slot_label": "Mon 2:40 PM", "taken": false, "booked_by": "", "booked_at": ""},
+  {"slot_label": "Tue 9:00 AM", "taken": false, "booked_by": "", "booked_at": ""},
+  {"slot_label": "Tue 3:20 PM", "taken": false, "booked_by": "", "booked_at": ""},
+  {"slot_label": "Wed 7:50 AM", "taken": false, "booked_by": "", "booked_at": ""},
+  {"slot_label": "Wed 11:30 AM", "taken": false, "booked_by": "", "booked_at": ""},
+  {"slot_label": "Thu 10:10 AM", "taken": false, "booked_by": "", "booked_at": ""},
+  {"slot_label": "Thu 3:40 PM", "taken": false, "booked_by": "", "booked_at": ""},
+  {"slot_label": "Fri 8:40 AM", "taken": false, "booked_by": "", "booked_at": ""},
+  {"slot_label": "Fri 11:20 AM", "taken": false, "booked_by": "", "booked_at": ""}
+]

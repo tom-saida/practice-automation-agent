@@ -1,0 +1,619 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Practice Automation OS — SAIDA</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --panel:#ffffff; --canvas:#eef1f6; --dot:#c9d2de;
+    --node:#ffffff; --node-border:#d4dbe6; --node-shadow:0 1px 3px rgba(23,32,48,.08);
+    --text:#1a2332; --muted:#5d6b80; --accent:#0d9488; --accent-soft:rgba(13,148,136,.14);
+    --wire:#b9c4d4; --wire-lbl:#7b8899;
+    --good:#1e9e50; --warn:#c07c10; --bad:#c93a3a;
+    --c-trigger:#f6e3c0; --c-system:#d7e2f2; --c-ai:#e3dcf5; --c-comms:#cfe9e6; --c-human:#d8ecd2; --c-data:#e2e6ee; --c-sec:#f2dede;
+    --log-bg:#101725; --log-text:#c8d4e6; --log-time:#5f7396;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0e1219; --panel:#161c27; --canvas:#12161f; --dot:#2a3242;
+      --node:#1c2330; --node-border:#323d50; --node-shadow:0 2px 6px rgba(0,0,0,.35);
+      --text:#e6ecf5; --muted:#93a1b8; --accent:#2dd4bf; --accent-soft:rgba(45,212,191,.16);
+      --wire:#3d4657; --wire-lbl:#6d7a90;
+      --good:#4ade80; --warn:#fbbf24; --bad:#f87171;
+      --c-trigger:#4a3b1e; --c-system:#243449; --c-ai:#372f4d; --c-comms:#1d3f3b; --c-human:#27401f; --c-data:#2b3345; --c-sec:#452a2a;
+      --log-bg:#0a0f18; --log-text:#c8d4e6; --log-time:#5f7396;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#f4f6f9; --panel:#ffffff; --canvas:#eef1f6; --dot:#c9d2de;
+    --node:#ffffff; --node-border:#d4dbe6; --node-shadow:0 1px 3px rgba(23,32,48,.08);
+    --text:#1a2332; --muted:#5d6b80; --accent:#0d9488; --accent-soft:rgba(13,148,136,.14);
+    --wire:#b9c4d4; --wire-lbl:#7b8899;
+    --good:#1e9e50; --warn:#c07c10; --bad:#c93a3a;
+    --c-trigger:#f6e3c0; --c-system:#d7e2f2; --c-ai:#e3dcf5; --c-comms:#cfe9e6; --c-human:#d8ecd2; --c-data:#e2e6ee; --c-sec:#f2dede;
+    --log-bg:#101725; --log-text:#c8d4e6; --log-time:#5f7396;
+  }
+  :root[data-theme="dark"]{
+    --bg:#0e1219; --panel:#161c27; --canvas:#12161f; --dot:#2a3242;
+    --node:#1c2330; --node-border:#323d50; --node-shadow:0 2px 6px rgba(0,0,0,.35);
+    --text:#e6ecf5; --muted:#93a1b8; --accent:#2dd4bf; --accent-soft:rgba(45,212,191,.16);
+    --wire:#3d4657; --wire-lbl:#6d7a90;
+    --good:#4ade80; --warn:#fbbf24; --bad:#f87171;
+    --c-trigger:#4a3b1e; --c-system:#243449; --c-ai:#372f4d; --c-comms:#1d3f3b; --c-human:#27401f; --c-data:#2b3345; --c-sec:#452a2a;
+    --log-bg:#0a0f18; --log-text:#c8d4e6; --log-time:#5f7396;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Avenir Next","Segoe UI Variable","Segoe UI",system-ui,sans-serif;
+    margin:0; padding:0 0 48px; line-height:1.45;
+  }
+  .wrap{max-width:1160px; margin:0 auto; padding:0 20px}
+
+  header{padding:30px 0 14px}
+  .brand .co{font-size:12px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--accent)}
+  h1{font-size:clamp(21px,3.4vw,27px); font-weight:600; margin:2px 0 6px; text-wrap:balance}
+  .thesis{color:var(--muted); font-size:15px; max-width:64ch; margin:0}
+  .chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px}
+  .chip{font-size:12px; font-weight:600; padding:5px 11px; border-radius:99px;
+    background:var(--accent-soft); color:var(--accent)}
+  .stack{display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:10px}
+  .stack .lbl{font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-right:2px}
+  .stack .s{font-size:12px; font-weight:600; color:var(--muted);
+    border:1px solid var(--node-border); background:var(--panel); border-radius:7px; padding:4px 9px}
+  .stack .note{font-size:11.5px; color:var(--muted); flex-basis:100%;}
+
+  .bar{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:16px 0 10px}
+  .tabs{display:flex; gap:6px; flex-wrap:wrap}
+  .tab{font:inherit; font-size:13px; font-weight:600; color:var(--muted);
+    background:var(--panel); border:1px solid var(--node-border); border-radius:9px;
+    padding:8px 12px; cursor:pointer}
+  .tab[aria-pressed="true"]{color:var(--accent); border-color:var(--accent); background:var(--accent-soft)}
+  .tab:focus-visible,.node:focus-visible,.run:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  .run{font:inherit; font-size:13.5px; font-weight:700; margin-left:auto;
+    background:var(--accent); color:#fff; border:none; border-radius:9px;
+    padding:9px 20px; cursor:pointer}
+  :root[data-theme="dark"] .run{color:#07211d}
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .run{color:#07211d} }
+  .run:disabled{opacity:.55; cursor:default}
+
+  .viewport{overflow-x:auto; border:1px solid var(--node-border); border-radius:14px; background:var(--canvas)}
+  .canvas{position:relative;
+    background-image:radial-gradient(var(--dot) 1.05px, transparent 1.05px);
+    background-size:22px 22px}
+  .canvas svg{position:absolute; inset:0; width:100%; height:100%; pointer-events:none}
+  .canvas svg path.w{fill:none; stroke:var(--wire); stroke-width:2}
+  .canvas svg path.w.lit{stroke:var(--accent); stroke-width:2.5}
+  .canvas svg text{font-size:11px; font-weight:600; fill:var(--wire-lbl);
+    paint-order:stroke; stroke:var(--canvas); stroke-width:4px; stroke-linejoin:round}
+  .canvas svg circle.pulse{fill:var(--accent)}
+
+  .node{position:absolute; width:176px; display:flex; align-items:center; gap:10px; text-align:left;
+    background:var(--node); border:1.5px solid var(--node-border); border-radius:11px;
+    padding:9px 11px; cursor:pointer; box-shadow:var(--node-shadow);
+    font-family:inherit; color:var(--text); transition:border-color .18s, box-shadow .18s}
+  .node .tile{flex:0 0 34px; height:34px; border-radius:8px; display:grid; place-items:center; font-size:17px}
+  .node .txt{min-width:0}
+  .node .txt b{display:block; font-size:12.6px; font-weight:650; line-height:1.22}
+  .node .txt i{display:block; font-style:normal; font-size:10.8px; color:var(--muted); line-height:1.25; margin-top:2px}
+  .node.visited{border-color:var(--accent)}
+  .node.active{border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft)}
+  .cat-trigger .tile{background:var(--c-trigger)} .cat-system .tile{background:var(--c-system)}
+  .cat-ai .tile{background:var(--c-ai)} .cat-comms .tile{background:var(--c-comms)}
+  .cat-human .tile{background:var(--c-human)} .cat-data .tile{background:var(--c-data)}
+  .cat-sec .tile{background:var(--c-sec)}
+
+  .outcome{position:absolute; top:14px; right:16px; font-size:13px; font-weight:700;
+    background:var(--panel); border:1.5px solid var(--good); color:var(--good);
+    border-radius:10px; padding:8px 14px; opacity:0; transform:translateY(-4px);
+    transition:opacity .3s, transform .3s; font-variant-numeric:tabular-nums; max-width:320px}
+  .outcome.show{opacity:1; transform:none}
+
+  .lower{display:grid; grid-template-columns:1.25fr 1fr; gap:14px; margin-top:14px}
+  @media (max-width:840px){ .lower{grid-template-columns:1fr} }
+  .logbox,.inspector{border-radius:14px; min-height:206px}
+  .logbox{background:var(--log-bg); padding:14px 16px; overflow:hidden}
+  .logbox h2,.inspector h2{font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; margin:0 0 10px}
+  .logbox h2{color:var(--log-time)}
+  .log{font-family:"SF Mono","Cascadia Code",ui-monospace,Menlo,monospace; font-size:12.3px;
+    color:var(--log-text); max-height:178px; overflow-y:auto; line-height:1.7}
+  .log .lt{color:var(--log-time); margin-right:10px; font-variant-numeric:tabular-nums}
+  .log .ok{color:var(--good)} .log .wn{color:var(--warn)}
+  .log .empty{color:var(--log-time)}
+  .inspector{background:var(--panel); border:1px solid var(--node-border); padding:14px 16px}
+  .inspector h2{color:var(--muted)}
+  .inspector .ihead{display:flex; align-items:center; gap:10px; margin-bottom:8px}
+  .inspector .ihead .tile{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;font-size:17px}
+  .inspector .ihead b{font-size:15px; font-weight:650}
+  .inspector .cat{font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+  .inspector p{font-size:13.5px; color:var(--text); margin:6px 0 10px; max-width:52ch}
+  .tech{display:flex; gap:8px; align-items:flex-start; font-size:12.5px; color:var(--muted); margin-bottom:8px}
+  .tech .tag{flex:0 0 auto; font-size:10.5px; font-weight:800; letter-spacing:.06em; color:var(--muted);
+    border:1px solid var(--node-border); border-radius:5px; padding:1.5px 6px; margin-top:1px}
+  .phi{display:flex; gap:8px; align-items:flex-start; font-size:12.5px; color:var(--muted);
+    border-top:1px dashed var(--node-border); padding-top:9px}
+  .phi .tag{flex:0 0 auto; font-size:10.5px; font-weight:800; letter-spacing:.06em; color:var(--accent);
+    border:1px solid var(--accent); border-radius:5px; padding:1.5px 6px; margin-top:1px}
+  .hint{color:var(--muted); font-size:12.5px}
+
+  footer{margin-top:22px; font-size:12px; color:var(--muted)}
+  @media (prefers-reduced-motion: reduce){ .outcome{transition:none} .node{transition:none} }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="co">SAIDA · Practice Automation OS</span></div>
+    <h1>Your phones, your PMS, and your inbox — finally working the same shift.</h1>
+    <p class="thesis">A live map of the system. It connects the software a practice already owns — no new platform to learn, no bot answering for you. Pick a scenario, press Run, click any node to see what it does, what it runs on, and where patient data does and doesn't go.</p>
+    <div class="chips">
+      <span class="chip">PHI stays in BAA-covered systems</span>
+      <span class="chip">Nothing outbound without human approval</span>
+      <span class="chip">Built in accounts the practice owns</span>
+    </div>
+    <div class="stack">
+      <span class="lbl">Reference stack</span>
+      <span class="s">RingCentral — calls, SMS, webhooks</span>
+      <span class="s">Greyfinch — PMS, GraphQL API</span>
+      <span class="s">Google Workspace — email + docs, under BAA</span>
+      <span class="s">n8n — orchestration, self-hosted, practice-owned</span>
+      <span class="s">Claude — the thinking, BAA-covered deployment</span>
+      <span class="note">Every piece is swappable — the audit confirms what your plan's API actually exposes before anything is built around it.</span>
+    </div>
+  </header>
+
+  <div class="bar">
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <button class="run" id="runBtn">▶ Run</button>
+  </div>
+
+  <div class="viewport"><div class="canvas" id="canvas"></div></div>
+
+  <div class="lower">
+    <div class="logbox">
+      <h2>Execution log</h2>
+      <div class="log" id="log"><div class="empty">Press Run to watch this workflow handle a real moment.</div></div>
+    </div>
+    <div class="inspector" id="inspector">
+      <h2>Node inspector</h2>
+      <div class="hint">Click any node on the canvas. Every node explains what it does, what it runs on, and its PHI rule.</div>
+    </div>
+  </div>
+
+  <footer>Demonstration with synthetic data — no patient information. Node timings simulated. SAIDA · tom@saida.us</footer>
+</div>
+
+<script>
+const CATNAMES={trigger:"Trigger",system:"Practice system",ai:"AI step",comms:"Patient message",human:"Human in the loop",data:"Reporting",sec:"Security layer"};
+const NW=176, NH=56;
+
+const SCENARIOS=[
+{
+  id:"missed", title:"Missed call → booked consult", h:520, w:1910,
+  nodes:[
+    {id:"call",   x:30,  y:210, cat:"trigger", ico:"📞", l:"Incoming call", s:"RingCentral line",
+      tech:"RingCentral — the practice's existing phone system",
+      d:"A parent calls about braces at 2:14 on a Tuesday. Nothing new is installed on the phones — the system just subscribes to RingCentral's call events.",
+      phi:"Call audio and caller records stay inside RingCentral, under its BAA."},
+    {id:"ring",   x:230, y:210, cat:"system", ico:"☎️", l:"Front desk rings", s:"20 seconds, as always",
+      tech:"RingCentral ring group — unchanged",
+      d:"Calls ring exactly as they do today. The front desk answers most of them; this system only exists for the ones they can't get to.",
+      phi:"No data leaves the phone system at this step."},
+    {id:"answered",x:440, y:70, cat:"human", ico:"🧑‍💼", l:"Answered", s:"Handled as usual — done",
+      tech:"—",
+      d:"Answered calls proceed like they always have. The automation stays out of the way.",
+      phi:"Not applicable — humans handling humans."},
+    {id:"missed", x:440, y:300, cat:"trigger", ico:"⚡", l:"Missed-call webhook", s:"Fires the instant the call drops",
+      tech:"RingCentral webhook → n8n (self-hosted in the practice's account)",
+      d:"RingCentral pushes a webhook the moment a call goes unanswered. That event starts the workflow — no polling, no delay. This is the moment where, in most practices, a new patient becomes the next practice's new patient.",
+      phi:"The event carries the caller's number and timestamp — the minimum necessary."},
+    {id:"text",   x:650, y:300, cat:"comms", ico:"💬", l:"Text-back in <60 sec", s:"From the practice's own number",
+      tech:"RingCentral SMS API",
+      d:"\"Sorry we missed you! Want us to call back, or want to grab a consult time?\" Sent from the same number the caller just dialed — not a third-party robot number.",
+      phi:"Template message with human-approved wording. No clinical content, ever."},
+    {id:"triage", x:860, y:300, cat:"ai", ico:"🧠", l:"Reply triage", s:"Who does the thinking",
+      tech:"Claude (Anthropic) — BAA-covered deployment, zero data retention",
+      d:"When the caller texts back, Claude classifies the reply: new patient, existing patient, or a question that needs a human. It reads one message and returns one label — it is never handed the chart, and it never writes to the patient.",
+      phi:"Sees the reply text only, processed under a BAA with zero retention. Ambiguity always routes to a human."},
+    {id:"slots",  x:1070, y:220, cat:"system", ico:"🗓️", l:"Read open slots", s:"Live from the PMS schedule",
+      tech:"Greyfinch GraphQL API — appointments query, read scope",
+      d:"For new-patient replies, the workflow queries Greyfinch for the next real consultation openings — the actual schedule, not a parallel calendar that drifts out of sync.",
+      phi:"Reads open time slots only. No other patient's data is touched or exposed."},
+    {id:"offer",  x:1280, y:220, cat:"comms", ico:"📅", l:"Offer two times", s:"Tap to book",
+      tech:"RingCentral SMS",
+      d:"\"We have Thursday 3:40 or Friday 9:10 — want either?\" Two concrete options convert better than a booking-page link, and both are guaranteed-real openings.",
+      phi:"Slot times only."},
+    {id:"book",   x:1490, y:220, cat:"system", ico:"✅", l:"Write the appointment", s:"Straight into Greyfinch",
+      tech:"Greyfinch GraphQL API — appointment mutation, write scope",
+      d:"The caller picks a time and the appointment is created in Greyfinch like any front-desk booking: patient shell record, consult type, provider column. The front desk sees it appear in the schedule they already use.",
+      phi:"Creates the record inside the PMS, under its BAA. The automation keeps no copy."},
+    {id:"remind", x:1700, y:140, cat:"comms", ico:"🔔", l:"Confirm + remind", s:"24 h and 2 h before",
+      tech:"n8n schedule + RingCentral SMS",
+      d:"Instant confirmation, then reminders at 24 hours and 2 hours. Ortho no-show rates drop hard when reminders are consistent — consistency is the thing humans can't sustain and software can't forget.",
+      phi:"Appointment time and practice address only — reminder content never includes treatment details."},
+    {id:"queue",  x:1070, y:420, cat:"human", ico:"📋", l:"Front-desk queue", s:"Existing patients & questions",
+      tech:"Shared queue in practice-owned tooling",
+      d:"Existing patients and anything ambiguous become a task with full context and one-tap callback. Humans handle the humans — the automation just makes sure nobody falls through.",
+      phi:"Task data lives in practice-owned accounts, role-based access."},
+    {id:"log",    x:1700, y:330, cat:"data", ico:"📊", l:"Logged for the digest", s:"Every step, timestamped",
+      tech:"Audit log + weekly rollup",
+      d:"Calls, misses, text-backs, bookings — every event is logged and rolls into the owner's Monday brief. Nothing fails silently.",
+      phi:"Aggregate counts in reporting; identified details stay in source systems."}
+  ],
+  wires:[
+    ["call","ring"],["ring","answered","answered"],["ring","missed","missed"],
+    ["missed","text"],["text","triage","caller replies"],
+    ["triage","slots","new patient"],["triage","queue","existing / other"],
+    ["slots","offer"],["offer","book","caller picks"],["book","remind"],["book","log"],["queue","log"]
+  ],
+  run:[
+    {n:"call",  t:"2:14:07 PM", log:"Incoming call · (813) 555-01•• · line 1"},
+    {n:"ring",  t:"2:14:09 PM", log:"Ringing front desk… desk is with a patient", w:["call","ring"]},
+    {n:"missed",t:"2:14:29 PM", log:"Unanswered after 20s — RingCentral webhook → n8n", w:["ring","missed"], cls:"wn"},
+    {n:"text",  t:"2:14:41 PM", log:"SMS sent from practice number: \"Sorry we missed you…\"", w:["missed","text"]},
+    {n:"triage",t:"2:16:52 PM", log:"Reply: \"Looking for a braces consult for my daughter\" → Claude: NEW_PATIENT (0.98)", w:["text","triage"]},
+    {n:"slots", t:"2:16:54 PM", log:"Greyfinch GraphQL: next consult openings → Thu 3:40, Fri 9:10", w:["triage","slots"]},
+    {n:"offer", t:"2:16:56 PM", log:"Offered both times by text", w:["slots","offer"]},
+    {n:"book",  t:"2:19:03 PM", log:"Caller picked Thu 3:40 → Greyfinch mutation: appointment created", w:["offer","book"], cls:"ok",
+      outcome:{count:5800, prefix:"Consult recovered · $", suffix:" case value (simulated)"}},
+    {n:"remind",t:"2:19:05 PM", log:"Confirmation sent · reminders scheduled for Wed 3:40 PM + Thu 1:40 PM", w:["book","remind"]},
+    {n:"log",   t:"2:19:06 PM", log:"Full trail logged — 4 min 59 s from missed call to booked consult", w:["book","log"], cls:"ok"}
+  ]
+},
+{
+  id:"voice", title:"After hours · voice agent", h:440, w:1500,
+  nodes:[
+    {id:"night", x:30,  y:180, cat:"trigger", ico:"🌙", l:"Call after hours", s:"7:52 PM, office closed",
+      tech:"RingCentral after-hours routing rule",
+      d:"Evenings and lunch hours are when working parents actually call. Instead of voicemail, the after-hours rule routes to a voice agent — introduced honestly as the practice's after-hours assistant.",
+      phi:"Routing happens inside the practice's phone system."},
+    {id:"agent", x:260, y:180, cat:"ai", ico:"🗣️", l:"Voice agent answers", s:"Who does the talking",
+      tech:"HIPAA-eligible voice AI (BAA + zero retention — vendor chosen in the audit)",
+      d:"A natural-voice agent greets the caller, says the office is closed, and offers to take details for a morning callback. It does not diagnose, quote treatment, or pretend to be human. Voice AI that hears patient calls must run under a signed BAA with zero retention — consumer voice tools don't qualify, which is a fact most vendors won't volunteer.",
+      phi:"BAA + zero-retention required, non-negotiable. Escalation rules give emergency instructions verbatim."},
+    {id:"capture",x:500, y:180, cat:"ai", ico:"📝", l:"Capture the essentials", s:"Name · reason · callback window",
+      tech:"Structured extraction from the call — Claude, BAA-covered",
+      d:"Three things, politely: who's calling, what they need, when to call back. The transcript is structured into a task, not dumped as a blob.",
+      phi:"Minimum-necessary capture; transcript stored only in practice-owned systems."},
+    {id:"confirm",x:740, y:100, cat:"comms", ico:"💬", l:"Confirmation text", s:"\"You're on tomorrow's list\"",
+      tech:"RingCentral SMS",
+      d:"The caller immediately gets a text confirming a morning callback — the call ends with certainty instead of a voicemail beep.",
+      phi:"Template message, no clinical content."},
+    {id:"task",  x:740, y:260, cat:"human", ico:"📋", l:"Morning callback queue", s:"Ranked, transcript attached",
+      tech:"Practice-owned queue",
+      d:"The front desk opens at 7:45 AM to a ranked callback list with reasons and transcripts. The first hour of the day becomes recovered demand instead of voicemail triage.",
+      phi:"Role-based access in practice-owned accounts."},
+    {id:"human", x:980, y:260, cat:"human", ico:"🧑‍💼", l:"Front desk calls back", s:"8:05 AM, human voice",
+      tech:"—",
+      d:"A person makes the call. The agent's only job was keeping the door open overnight — conversion stays human.",
+      phi:"Not applicable — a phone call."},
+    {id:"log2",  x:1220, y:180, cat:"data", ico:"📊", l:"Logged for the digest", s:"After-hours demand, measured",
+      tech:"Audit log + weekly rollup",
+      d:"The owner finally sees how much demand arrives outside office hours — the data that justifies (or kills) extended-hours staffing.",
+      phi:"Aggregate counts only in reporting."}
+  ],
+  wires:[
+    ["night","agent"],["agent","capture"],["capture","confirm","caller"],["capture","task","practice"],
+    ["task","human"],["confirm","log2"],["human","log2"]
+  ],
+  run:[
+    {n:"night",  t:"7:52:18 PM", log:"Incoming call · office closed since 5:00 PM"},
+    {n:"agent",  t:"7:52:20 PM", log:"Voice agent answered: \"You've reached [Practice], we're closed…\"", w:["night","agent"]},
+    {n:"capture",t:"7:53:40 PM", log:"Captured: Mara · cracked retainer · call after 9 AM", w:["agent","capture"]},
+    {n:"confirm",t:"7:53:52 PM", log:"Confirmation text sent — caller knows what happens next", w:["capture","confirm"], cls:"ok"},
+    {n:"task",   t:"7:53:53 PM", log:"Callback task created, transcript attached, ranked #2", w:["capture","task"]},
+    {n:"human",  t:"8:05:11 AM", log:"Front desk called back — repair visit scheduled", w:["task","human"], cls:"ok"},
+    {n:"log2",   t:"8:05:12 AM", log:"After-hours call resolved: 0 voicemails, 1 kept patient", w:["human","log2"], cls:"ok",
+      outcome:{text:"After-hours call kept · no voicemail lost it"}}
+  ]
+},
+{
+  id:"loops", title:"Nightly sweep · balances & open loops", h:560, w:1740,
+  nodes:[
+    {id:"cron",  x:30,  y:230, cat:"trigger", ico:"🕘", l:"Every night, 9 PM", s:"While the office sleeps",
+      tech:"n8n schedule trigger — practice-owned instance",
+      d:"The quiet killer in every practice: diagnosed treatment, no-showed consults, aging balances, and missing documents that nobody has time to chase. This sweep chases all of it, every night.",
+      phi:"Runs entirely inside practice-owned accounts."},
+    {id:"pull",  x:250, y:230, cat:"system", ico:"🗄️", l:"Read the PMS", s:"Open loops only",
+      tech:"Greyfinch GraphQL API — read scopes: treatment plans, appointments, ledger",
+      d:"Queries Greyfinch for anything with a next step that never happened. In a typical practice, 40–60% of diagnosed treatment sits unscheduled — this is where it hides.",
+      phi:"Minimum-necessary fields per record: status, dates, amounts, contact preference."},
+    {id:"tx",    x:490, y:60, cat:"data", ico:"🦷", l:"Unscheduled treatment", s:"Diagnosed, never booked",
+      tech:"Greyfinch treatment-plan query",
+      d:"Treatment presented but never scheduled, sorted by value and how long it's been sitting.",
+      phi:"Referenced by record ID; details stay in the PMS."},
+    {id:"noshow",x:490, y:180, cat:"data", ico:"🗓️", l:"Consult no-shows", s:"30 / 60 / 90-day windows",
+      tech:"Greyfinch appointment query",
+      d:"People who booked a consult and didn't show get a graduated nudge sequence — a check-in at 30 days, a gentle offer at 60, a last call at 90.",
+      phi:"Referenced by record ID; details stay in the PMS."},
+    {id:"bal",   x:490, y:300, cat:"data", ico:"💳", l:"Aging balances", s:"Politely, on schedule",
+      tech:"Greyfinch ledger query",
+      d:"Balances past terms get a courteous, consistent reminder cadence — the awkward chase nobody at the desk enjoys. Consistency, not aggression, is what collects.",
+      phi:"Amounts and due dates only — never card or account numbers."},
+    {id:"docs",  x:490, y:420, cat:"data", ico:"📄", l:"Missing documents", s:"Insurance, forms, referrals",
+      tech:"Greyfinch + Google Drive (BAA) status checks",
+      d:"Missing insurance info and unsigned forms get requested before they block an appointment — not discovered at check-in.",
+      phi:"Document status only, never document contents."},
+    {id:"rank",  x:730, y:230, cat:"ai", ico:"🧮", l:"Rank by value + age", s:"Biggest, oldest first",
+      tech:"Scoring rules in n8n — deterministic, auditable",
+      d:"Every open loop is scored by dollar value and age so tomorrow's outreach starts where the money and the risk are largest. Deliberately rule-based, not AI — ranking money should be explainable line by line.",
+      phi:"Works on amounts, dates, and status codes."},
+    {id:"draft", x:960, y:230, cat:"ai", ico:"✍️", l:"Draft the outreach", s:"Who does the writing",
+      tech:"Claude — BAA-covered, template-bound",
+      d:"Claude fills approved templates with the right names, amounts, and dates, and drafts anything non-standard for human review. Drafted — never sent on its own.",
+      phi:"Minimum-necessary fields under BAA-covered processing; templates pre-approved by the practice."},
+    {id:"gate",  x:1180, y:230, cat:"human", ico:"✅", l:"Approval gate", s:"A human clicks send",
+      tech:"One-tap approval queue — practice-owned",
+      d:"Every message waits for one-click human approval each morning. This is a design principle, not a beta limitation: nothing leaves the practice on its own.",
+      phi:"The gate IS the compliance story — external comms are always human-released."},
+    {id:"send",  x:1330, y:110, cat:"comms", ico:"💬", l:"Morning batch goes out", s:"Text + email, payment links included",
+      tech:"RingCentral SMS + Gmail API (BAA)",
+      d:"Approved messages send in the morning window when people respond. Balance reminders carry a secure payment link; replies route to the front-desk queue.",
+      phi:"Payment links come from the practice's existing merchant provider — the automation never sees card data."},
+    {id:"pay",   x:1540, y:110, cat:"system", ico:"💵", l:"Payment posts", s:"Loop closes itself",
+      tech:"Practice's existing payment provider → webhook → Greyfinch ledger",
+      d:"When a payment link is used, the provider's webhook posts it back against the ledger and the loop closes automatically — no one reconciles it by hand, and it drops off tomorrow's list.",
+      phi:"Card data lives only with the payment processor, as it does today."},
+    {id:"log3",  x:1540, y:340, cat:"data", ico:"📊", l:"Logged for the digest", s:"Recovered $ attributed",
+      tech:"Audit log + weekly rollup",
+      d:"Every recovered booking and payment is attributed to the sweep, so the owner sees exactly what it's worth each week.",
+      phi:"Aggregate reporting only."}
+  ],
+  wires:[
+    ["cron","pull"],["pull","tx"],["pull","noshow"],["pull","bal"],["pull","docs"],
+    ["tx","rank"],["noshow","rank"],["bal","rank"],["docs","rank"],
+    ["rank","draft"],["draft","gate"],["gate","send","approved"],["send","pay","link used"],["pay","log3"],["gate","log3"]
+  ],
+  run:[
+    {n:"cron",  t:"9:00:00 PM", log:"Nightly sweep started · n8n (practice-owned)"},
+    {n:"pull",  t:"9:00:04 PM", log:"Greyfinch GraphQL: 1,214 active records scanned", w:["cron","pull"]},
+    {n:"tx",    t:"9:00:09 PM", log:"9 unscheduled treatment plans (oldest: 74 days, largest: $6.2k)", w:["pull","tx"], cls:"wn"},
+    {n:"noshow",t:"9:00:11 PM", log:"3 consult no-shows in the 30/60/90 windows", w:["pull","noshow"], cls:"wn"},
+    {n:"bal",   t:"9:00:13 PM", log:"5 balances past terms · $4,180 total", w:["pull","bal"], cls:"wn"},
+    {n:"docs",  t:"9:00:15 PM", log:"2 appointments blocked on missing insurance info", w:["pull","docs"], cls:"wn"},
+    {n:"rank",  t:"9:00:18 PM", log:"19 open loops ranked by $ × age", w:["bal","rank"]},
+    {n:"draft", t:"9:00:31 PM", log:"Claude drafted 14 messages from approved templates · 5 flagged call-instead", w:["rank","draft"]},
+    {n:"gate",  t:"9:00:32 PM", log:"All 14 waiting for approval — nothing sends tonight", w:["draft","gate"], cls:"ok"},
+    {n:"send",  t:"8:12:44 AM", log:"Front desk approved 14/14 — morning batch out, payment links live", w:["gate","send"], cls:"ok"},
+    {n:"pay",   t:"11:37:02 AM", log:"2 payment links used · $1,140 posted to the Greyfinch ledger automatically", w:["send","pay"], cls:"ok",
+      outcome:{text:"19 loops found · 14 chased · $1,140 collected by lunch (simulated)"}},
+    {n:"log3",  t:"11:37:03 AM", log:"All activity logged and attributed for the owner digest", w:["pay","log3"]}
+  ]
+},
+{
+  id:"digest", title:"Owner digest · Monday 7 AM", h:430, w:1500,
+  nodes:[
+    {id:"mon",   x:30,  y:170, cat:"trigger", ico:"🕖", l:"Monday, 7:00 AM", s:"Before the first patient",
+      tech:"n8n schedule trigger",
+      d:"The owner produces revenue chairside all day and manages in stolen minutes. The digest turns four systems' worth of data into one 90-second read.",
+      phi:"Runs in practice-owned accounts."},
+    {id:"phones",x:260, y:60, cat:"system", ico:"📞", l:"Phone stats", s:"Answer rate, recoveries",
+      tech:"RingCentral analytics API",
+      d:"Calls, misses, text-backs, and recovered consults from the week — the leak, measured weekly instead of never.",
+      phi:"Aggregate counts only."},
+    {id:"pms",   x:260, y:170, cat:"system", ico:"🗄️", l:"PMS numbers", s:"Consults, starts, no-shows",
+      tech:"Greyfinch GraphQL — reporting queries",
+      d:"Consults held, treatment accepted, case starts, and the open-loop backlog trend.",
+      phi:"Aggregate counts only."},
+    {id:"pay2",  x:260, y:280, cat:"system", ico:"💳", l:"Payments & AR", s:"Collected, outstanding, aging",
+      tech:"Greyfinch ledger + payment-provider reports",
+      d:"What came in, what's overdue, and whether the nightly sweep is shrinking the pile.",
+      phi:"Totals only — no card or account data."},
+    {id:"kpi",   x:520, y:170, cat:"ai", ico:"🧮", l:"Assemble the brief", s:"Numbers + the 3 things to know",
+      tech:"Claude — aggregates in, plain English out",
+      d:"KPIs plus exceptions in plain English: \"Answer rate dipped Thursday afternoon — two staff out\" beats a dashboard nobody opens. Claude only ever sees the aggregates.",
+      phi:"Aggregates in; aggregates out. No patient-level data in the digest pipeline."},
+    {id:"email", x:780, y:170, cat:"comms", ico:"📧", l:"One email to the owner", s:"90-second read, no logins",
+      tech:"Gmail API — Workspace under BAA",
+      d:"Delivered to the inbox every Monday. No dashboard, no login, no app. If something needs a decision, it says so in the first line.",
+      phi:"Aggregate business data, not patient records."},
+    {id:"owner", x:1030, y:170, cat:"human", ico:"🙋", l:"Owner reads it", s:"Coffee, 7:04 AM",
+      tech:"—",
+      d:"Staffing, marketing spend by referral source, whether Thursday needs coverage — decisions finally run on numbers instead of anecdote.",
+      phi:"Not applicable."},
+    {id:"log4",  x:1280, y:170, cat:"data", ico:"📊", l:"Trail kept", s:"Every digest archived",
+      tech:"Practice-owned archive",
+      d:"Digests archive automatically — a week-by-week operational history a new office manager can read on day one.",
+      phi:"Aggregate history in practice-owned storage."}
+  ],
+  wires:[
+    ["mon","phones"],["mon","pms"],["mon","pay2"],
+    ["phones","kpi"],["pms","kpi"],["pay2","kpi"],
+    ["kpi","email"],["email","owner"],["owner","log4"]
+  ],
+  run:[
+    {n:"mon",   t:"7:00:00 AM", log:"Weekly digest run started"},
+    {n:"phones",t:"7:00:03 AM", log:"RingCentral: 312 calls · 91% answered · 11 missed → 9 recovered", w:["mon","phones"], cls:"ok"},
+    {n:"pms",   t:"7:00:05 AM", log:"Greyfinch: 14 consults held · 6 case starts · no-shows down 2", w:["mon","pms"]},
+    {n:"pay2",  t:"7:00:07 AM", log:"Ledger: $41.2k collected · AR over 60 days down $3.1k", w:["mon","pay2"]},
+    {n:"kpi",   t:"7:00:12 AM", log:"Brief assembled: 8 KPIs + 3 exceptions worth reading", w:["phones","kpi"]},
+    {n:"email", t:"7:00:14 AM", log:"Digest emailed via Gmail API (Workspace BAA)", w:["kpi","email"], cls:"ok"},
+    {n:"owner", t:"7:04:38 AM", log:"Opened. Read time: 87 seconds.", w:["email","owner"], cls:"ok",
+      outcome:{text:"A week of operations · one email · zero logins (simulated)"}},
+    {n:"log4",  t:"7:04:39 AM", log:"Digest archived to the practice's records", w:["owner","log4"]}
+  ]
+},
+{
+  id:"under", title:"Under the hood · data & security", h:560, w:1480,
+  nodes:[
+    {id:"src1", x:30, y:80, cat:"trigger", ico:"📞", l:"RingCentral events", s:"Calls, SMS — webhook push",
+      tech:"Webhooks — pushed the moment something happens; no polling",
+      d:"How data gets in, part 1: RingCentral pushes call and message events to the workflow the instant they occur. Push, not poll — nothing scans patient data looking for work to do.",
+      phi:"Events carry numbers, timestamps, and message text — nothing more."},
+    {id:"src2", x:30, y:220, cat:"trigger", ico:"🌐", l:"Website forms", s:"New-patient inquiries",
+      tech:"Form webhook → n8n",
+      d:"How data gets in, part 2: the existing website's inquiry form posts straight into the same intake lane as phone traffic — one queue, not two.",
+      phi:"Only what the visitor typed; the form itself gets a retention rule."},
+    {id:"src3", x:30, y:360, cat:"trigger", ico:"📧", l:"Practice inbox", s:"Referrals, insurance email",
+      tech:"Gmail API — Google Workspace under BAA",
+      d:"How data gets in, part 3: the practice inbox is watched for referral letters and insurance correspondence, which become tracked tasks instead of unread email.",
+      phi:"Covered by the Google Workspace BAA the practice signs (free, in Admin Console)."},
+    {id:"vault", x:280, y:470, cat:"sec", ico:"🔐", l:"Credential vault", s:"The practice holds the keys",
+      tech:"Practice-owned secret store — API keys scoped and rotated",
+      d:"Every API credential lives in the practice's own vault, scoped to the minimum permission that works, MFA on every account. I work as an invited user and never hold the keys — fire me and nothing needs re-securing.",
+      phi:"Access is role-based and revocable in one click."},
+    {id:"orch", x:280, y:220, cat:"system", ico:"🧩", l:"Orchestrator", s:"The only new piece",
+      tech:"n8n — self-hosted in the practice's own cloud account",
+      d:"The switchboard that connects everything. It's the only new software in the design, it runs in an account the practice owns, and it holds no patient data at rest — it moves the minimum between systems and forgets.",
+      phi:"Stateless by design: PHI passes through, is never stored, and every pass is logged."},
+    {id:"gf", x:560, y:100, cat:"system", ico:"🗄️", l:"Greyfinch", s:"System of record — stays that way",
+      tech:"GraphQL API — read/write, minimum scopes, confirmed against your plan in the audit",
+      d:"How data gets grabbed: named queries with minimum fields — 'next open consult slots', 'plans with no appointment', 'balances past terms'. Writes are equally narrow: create appointment, post note. The chart never leaves Greyfinch.",
+      phi:"The PMS remains the single source of truth for all patient records, under its BAA."},
+    {id:"brain", x:560, y:340, cat:"ai", ico:"🧠", l:"Claude — the thinking", s:"Classify · extract · draft",
+      tech:"Anthropic Claude via a BAA-covered deployment, zero data retention",
+      d:"Who does the thinking, precisely: Claude classifies replies, extracts fields from documents, and drafts template-bound messages. It receives the smallest snippet that lets it do the job, returns a label or a draft, and retains nothing. It never decides to send anything — humans and rules do.",
+      phi:"BAA-covered, zero retention, minimum-necessary snippets. No PHI ever goes to a model without that coverage — including during development."},
+    {id:"appr", x:840, y:220, cat:"human", ico:"✅", l:"Human approval", s:"For anything outbound",
+      tech:"One-tap approve/edit/reject queue",
+      d:"Every patient-facing message crosses a human's screen before it sends. Approvals take seconds; the point is that a person is always the last gate.",
+      phi:"Releasing any automation from this gate is a separate, explicit sign-off after testing."},
+    {id:"act", x:1080, y:220, cat:"comms", ico:"📤", l:"Action executes", s:"Message · task · booking",
+      tech:"RingCentral SMS · Gmail (BAA) · Greyfinch mutations",
+      d:"The approved action goes out through the practice's own channels — its number, its inbox, its PMS. Patients only ever interact with systems the practice already uses.",
+      phi:"No third-party sender domains or robot numbers."},
+    {id:"audit", x:1290, y:220, cat:"sec", ico:"🧾", l:"Audit log", s:"Every hop, immutable",
+      tech:"Append-only log in practice-owned storage",
+      d:"Every event, query, draft, approval, and send writes a log entry: what ran, when, on which record, who approved, what happened. This is what makes the system inspectable — and what makes incidents reportable instead of mysterious.",
+      phi:"The log records references and outcomes, not chart contents."}
+  ],
+  wires:[
+    ["src1","orch"],["src2","orch"],["src3","orch"],["vault","orch","scoped keys"],
+    ["orch","gf","min. scopes"],["orch","brain","snippets only"],
+    ["brain","appr","drafts"],["appr","act","approved"],["act","audit"]
+  ],
+  run:[
+    {n:"src1", t:"2:14:29 PM", log:"Webhook in: missed call · payload = number + timestamp, nothing else"},
+    {n:"vault", t:"2:14:30 PM", log:"Scoped token issued from the practice's vault (read: schedule)", w:["vault","orch"]},
+    {n:"orch",  t:"2:14:30 PM", log:"n8n workflow starts — practice-owned instance, nothing stored", w:["src1","orch"]},
+    {n:"gf",    t:"2:14:31 PM", log:"Greyfinch query: patient by phone → 4 fields returned (min. necessary)", w:["orch","gf"]},
+    {n:"brain", t:"2:16:52 PM", log:"Claude (BAA, zero retention): one reply in → one label out", w:["orch","brain"]},
+    {n:"appr",  t:"2:16:53 PM", log:"Drafted response queued for human approval", w:["brain","appr"]},
+    {n:"act",   t:"2:17:40 PM", log:"Approved → sent from the practice's own number", w:["appr","act"], cls:"ok"},
+    {n:"audit", t:"2:17:41 PM", log:"Audit entries written for every hop: 7 events, 1 approval, 0 stored PHI", w:["act","audit"], cls:"ok",
+      outcome:{text:"Every hop scoped, logged, practice-owned"}}
+  ]
+}
+];
+
+/* ── engine ─────────────────────────────────────────── */
+const $=s=>document.querySelector(s);
+const canvas=$("#canvas"), logEl=$("#log"), insp=$("#inspector"), runBtn=$("#runBtn"), tabsEl=$("#tabs");
+let cur=SCENARIOS[0], runToken=0;
+const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+function port(n,side){ return side==="out" ? [n.x+NW, n.y+NH/2] : [n.x, n.y+NH/2]; }
+function wirePath(a,b){
+  const [x1,y1]=port(a,"out"), [x2,y2]=port(b,"in");
+  const c=Math.max(40,Math.abs(x2-x1)*0.5);
+  return `M ${x1} ${y1} C ${x1+c} ${y1}, ${x2-c} ${y2}, ${x2} ${y2}`;
+}
+function nodeById(id){ return cur.nodes.find(n=>n.id===id); }
+
+function render(){
+  runToken++;
+  canvas.innerHTML=""; canvas.style.width=cur.w+"px"; canvas.style.height=cur.h+"px";
+  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+  svg.setAttribute("viewBox",`0 0 ${cur.w} ${cur.h}`);
+  cur.wires.forEach(([f,t,lbl])=>{
+    const p=document.createElementNS(svg.namespaceURI,"path");
+    p.setAttribute("d",wirePath(nodeById(f),nodeById(t)));
+    p.setAttribute("class","w"); p.dataset.k=f+">"+t; svg.appendChild(p);
+    if(lbl){
+      const a=nodeById(f),b=nodeById(t);
+      const tx=document.createElementNS(svg.namespaceURI,"text");
+      tx.setAttribute("x",(a.x+NW+b.x)/2); tx.setAttribute("y",(a.y+b.y+NH)/2-6);
+      tx.setAttribute("text-anchor","middle"); tx.textContent=lbl; svg.appendChild(tx);
+    }
+  });
+  canvas.appendChild(svg);
+  cur.nodes.forEach(n=>{
+    const el=document.createElement("button");
+    el.className="node cat-"+n.cat; el.id="nd-"+n.id;
+    el.style.left=n.x+"px"; el.style.top=n.y+"px";
+    el.innerHTML=`<span class="tile">${n.ico}</span><span class="txt"><b>${n.l}</b><i>${n.s}</i></span>`;
+    el.addEventListener("click",()=>inspect(n));
+    canvas.appendChild(el);
+  });
+  const oc=document.createElement("div"); oc.className="outcome"; oc.id="outcome"; canvas.appendChild(oc);
+  logEl.innerHTML='<div class="empty">Press Run to watch this workflow handle a real moment.</div>';
+  insp.innerHTML='<h2>Node inspector</h2><div class="hint">Click any node on the canvas. Every node explains what it does, what it runs on, and its PHI rule.</div>';
+  runBtn.disabled=false;
+}
+
+function inspect(n){
+  const tech=n.tech && n.tech!=="—" ? `<div class="tech"><span class="tag">RUNS ON</span><span>${n.tech}</span></div>` : "";
+  insp.innerHTML=`<h2>Node inspector</h2>
+    <div class="ihead"><span class="tile" style="background:var(--c-${n.cat})">${n.ico}</span>
+      <span><b>${n.l}</b><br><span class="cat">${CATNAMES[n.cat]}</span></span></div>
+    <p>${n.d}</p>
+    ${tech}
+    <div class="phi"><span class="tag">PHI</span><span>${n.phi}</span></div>`;
+}
+
+function addLog(t,msg,cls){
+  const d=document.createElement("div"); d.className="ll"+(cls?" "+cls:"");
+  d.innerHTML=`<span class="lt">${t}</span><span class="${cls||""}">${msg}</span>`;
+  if(logEl.querySelector(".empty")) logEl.innerHTML="";
+  logEl.appendChild(d); logEl.scrollTop=logEl.scrollHeight;
+}
+
+function pulse(fromId,toId){
+  if(reduced) return Promise.resolve();
+  const p=canvas.querySelector(`path[data-k="${fromId}>${toId}"]`);
+  if(!p) return Promise.resolve();
+  p.classList.add("lit");
+  const svg=p.ownerSVGElement;
+  const c=document.createElementNS(svg.namespaceURI,"circle");
+  c.setAttribute("r","5"); c.setAttribute("class","pulse");
+  const am=document.createElementNS(svg.namespaceURI,"animateMotion");
+  am.setAttribute("dur","0.45s"); am.setAttribute("fill","freeze");
+  am.setAttribute("path",p.getAttribute("d"));
+  c.appendChild(am); svg.appendChild(c);
+  am.beginElement && am.beginElement();
+  return sleep(460).then(()=>c.remove());
+}
+
+function countUp(el,pre,end,suf,tok){
+  const t0=performance.now(), dur=900;
+  function f(now){
+    if(tok!==runToken) return;
+    const k=Math.min(1,(now-t0)/dur), v=Math.round(end*(1-Math.pow(1-k,3)));
+    el.textContent=pre+v.toLocaleString()+suf;
+    if(k<1) requestAnimationFrame(f);
+  }
+  requestAnimationFrame(f);
+}
+
+async function run(){
+  render(); const tok=runToken; runBtn.disabled=true;
+  for(const step of cur.run){
+    if(tok!==runToken) return;
+    if(step.w) await pulse(step.w[0],step.w[1]);
+    if(tok!==runToken) return;
+    canvas.querySelectorAll(".node.active").forEach(e=>{e.classList.remove("active");e.classList.add("visited");});
+    const el=$("#nd-"+step.n); if(el) el.classList.add("active");
+    addLog(step.t,step.log,step.cls);
+    if(step.outcome){
+      const oc=$("#outcome"); oc.classList.add("show");
+      if(step.outcome.count!=null){ countUp(oc,step.outcome.prefix,step.outcome.count,step.outcome.suffix,tok); }
+      else oc.textContent=step.outcome.text;
+    }
+    await sleep(reduced?350:900);
+  }
+  if(tok===runToken) runBtn.disabled=false;
+}
+
+SCENARIOS.forEach((s,i)=>{
+  const b=document.createElement("button");
+  b.className="tab"; b.textContent=s.title; b.setAttribute("role","tab");
+  b.setAttribute("aria-pressed", i===0 ? "true":"false");
+  b.addEventListener("click",()=>{
+    tabsEl.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");
+    cur=s; render();
+  });
+  tabsEl.appendChild(b);
+});
+runBtn.addEventListener("click",run);
+render();
+</script>
