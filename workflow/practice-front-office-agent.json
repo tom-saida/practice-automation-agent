@@ -1,73 +1,5827 @@
 {
-  "name": "Practice Front-Office Agent (ortho demo)",
-  "settings": { "executionOrder": "v1" },
-  "pinData": {},
-  "nodes": [
-    {"parameters":{"httpMethod":"POST","path":"ortho-missed-call","options":{}},"id":"ca59be6c-5874-44d4-aec4-ac6f61c71f3c","name":"Missed Call Webhook","type":"n8n-nodes-base.webhook","typeVersion":2.1,"position":[-1184,-240]},
-    {"parameters":{"jsCode":"const j = $input.first().json;\nconst b = j.body || j || {};\nreturn [{ json: {\n  phone: b.caller || b.From || b.from || '',\n  call_id: b.call_id || b.CallSid || 'unknown'\n} }];"},"id":"cffbd70e-403b-42ce-b5ee-3c4f4d02e6ba","name":"Normalize Missed Call","type":"n8n-nodes-base.code","typeVersion":2,"position":[-960,-240]},
-    {"parameters":{"operation":"upsert","dataTableId":{"__rl":true,"mode":"name","value":"ortho_conversations"},"matchType":"allConditions","filters":{"conditions":[{"keyName":"phone","keyValue":"={{ $('Normalize Missed Call').item.json.phone }}"}]},"columns":{"mappingMode":"defineBelow","value":{"phone":"={{ $('Normalize Missed Call').item.json.phone }}","state":"texted","patient_type":"","last_message":"","offered_slots":"","updated_at":"={{ $now.toISO() }}"},"schema":[{"id":"phone","displayName":"phone","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"state","displayName":"state","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"patient_type","displayName":"patient_type","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"last_message","displayName":"last_message","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"offered_slots","displayName":"offered_slots","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"updated_at","displayName":"updated_at","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true}]},"options":{}},"id":"21bec91c-51db-4734-82a9-5472118d4370","name":"Save Conversation (texted)","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[-736,-240]},
-    {"parameters":{"dataTableId":{"__rl":true,"mode":"name","value":"ortho_events"},"columns":{"mappingMode":"defineBelow","value":{"event":"missed_call","phone":"={{ $('Normalize Missed Call').item.json.phone }}","detail":"={{ 'call ' + $('Normalize Missed Call').item.json.call_id }}","at":"={{ $now.toISO() }}"},"schema":[{"id":"event","displayName":"event","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"phone","displayName":"phone","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"detail","displayName":"detail","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"at","displayName":"at","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true}]},"options":{}},"id":"0f039eed-1fe8-47e4-8f01-520ee7c8ed8e","name":"Log Missed Call","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[-528,-240]},
-    {"parameters":{"assignments":{"assignments":[{"id":"tb-phone","name":"phone","value":"={{ $('Normalize Missed Call').item.json.phone }}","type":"string"},{"id":"tb-text","name":"sms_text","value":"Sorry we missed your call! This is Harborline Orthodontics - want us to call you right back, or are you looking to set up a free consult? Just reply here.","type":"string"},{"id":"tb-event","name":"event","value":"text_back","type":"string"}]},"options":{}},"id":"cbf2e090-94f6-47df-ac75-569370e2fe00","name":"Compose Text-Back","type":"n8n-nodes-base.set","typeVersion":3.4,"position":[-304,-240]},
-    {"parameters":{"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict","version":1},"conditions":[{"leftValue":"simulate","operator":{"type":"string","operation":"equals"},"rightValue":"live"}],"combinator":"and"},"options":{}},"id":"204875f5-bdb4-428f-aeee-f4b75723bbe4","name":"Send Mode: live?","type":"n8n-nodes-base.if","typeVersion":2.3,"position":[32,-64]},
-    {"parameters":{"from":"<__PLACEHOLDER_VALUE__Practice SMS number__>","to":"={{ $json.phone }}","message":"={{ $json.sms_text }}","options":{}},"id":"6980af89-72ff-4be0-8e3e-ff03aeda4d77","name":"Send SMS (Twilio)","type":"n8n-nodes-base.twilio","typeVersion":1,"position":[272,-160]},
-    {"parameters":{"dataTableId":{"__rl":true,"mode":"name","value":"ortho_events"},"columns":{"mappingMode":"defineBelow","value":{"event":"sms_sent","phone":"={{ $('Send Mode: live?').item.json.phone }}","detail":"={{ $('Send Mode: live?').item.json.event + ': ' + $('Send Mode: live?').item.json.sms_text }}","at":"={{ $now.toISO() }}"},"schema":[{"id":"event","displayName":"event","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"phone","displayName":"phone","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"detail","displayName":"detail","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"at","displayName":"at","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true}]},"options":{}},"id":"4ffcd4ca-6e3d-4912-826d-8fff2b0fd927","name":"Log SMS Sent","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[512,-160]},
-    {"parameters":{"dataTableId":{"__rl":true,"mode":"name","value":"ortho_events"},"columns":{"mappingMode":"defineBelow","value":{"event":"sms_simulated","phone":"={{ $json.phone }}","detail":"={{ $json.event + ': ' + $json.sms_text }}","at":"={{ $now.toISO() }}"},"schema":[{"id":"event","displayName":"event","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"phone","displayName":"phone","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"detail","displayName":"detail","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"at","displayName":"at","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true}]},"options":{}},"id":"651f25f6-27a4-43e3-a693-f6a067305bf8","name":"Log SMS Simulated","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[272,48]},
-    {"parameters":{"httpMethod":"POST","path":"ortho-inbound-sms","options":{}},"id":"6da7451b-8007-4938-8229-0d26d7235ec5","name":"Inbound SMS Webhook","type":"n8n-nodes-base.webhook","typeVersion":2.1,"position":[-1184,704]},
-    {"parameters":{"jsCode":"const j = $input.first().json;\nconst b = j.body || j || {};\nreturn [{ json: {\n  phone: b.From || b.from || b.phone || '',\n  text: b.Body || b.body || b.text || ''\n} }];"},"id":"23d84ff6-67b1-4654-87a6-2af76f6c5a1b","name":"Normalize Inbound","type":"n8n-nodes-base.code","typeVersion":2,"position":[-960,704]},
-    {"parameters":{"operation":"get","dataTableId":{"__rl":true,"mode":"name","value":"ortho_admins"},"matchType":"allConditions","filters":{"conditions":[{"keyName":"phone","keyValue":"={{ $('Normalize Inbound').item.json.phone }}"}]},"limit":1},"id":"851c4908-8c56-4a04-aa41-8c164799c26c","name":"Admin Check","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[-720,896],"alwaysOutputData":true},
-    {"parameters":{"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"loose","version":1},"conditions":[{"id":"adm-1","leftValue":"={{ $json.phone ?? '' }}","rightValue":"","operator":{"type":"string","operation":"notEmpty","singleValue":true}}],"combinator":"and"},"options":{}},"id":"e7b27762-af7b-481d-8c42-0fc161aa44dd","name":"Is Admin?","type":"n8n-nodes-base.if","typeVersion":2.3,"position":[-528,1168]},
-    {"parameters":{"conditions":{"options":{"caseSensitive":false,"leftValue":"","typeValidation":"strict","version":1},"conditions":[{"leftValue":"={{ $json.text.trim().toLowerCase() }}","operator":{"type":"string","operation":"regex"},"rightValue":"^(stop|unsubscribe|end|quit|cancel)$"}],"combinator":"and"},"options":{}},"id":"8a621a99-a570-4c48-b8f9-efd6fed6cbc0","name":"Opt-Out?","type":"n8n-nodes-base.if","typeVersion":2.3,"position":[-736,704]},
-    {"parameters":{"operation":"upsert","dataTableId":{"__rl":true,"mode":"name","value":"ortho_conversations"},"matchType":"allConditions","filters":{"conditions":[{"keyName":"phone","keyValue":"={{ $('Normalize Inbound').item.json.phone }}"}]},"columns":{"mappingMode":"defineBelow","value":{"phone":"={{ $('Normalize Inbound').item.json.phone }}","state":"opted_out","last_message":"={{ $('Normalize Inbound').item.json.text }}","updated_at":"={{ $now.toISO() }}"},"schema":[{"id":"phone","displayName":"phone","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"state","displayName":"state","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"last_message","displayName":"last_message","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"updated_at","displayName":"updated_at","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true}]},"options":{}},"id":"8b06d7b6-1a49-493f-a7a1-b2d2381bf933","name":"Record Opt-Out","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[-528,528]},
-    {"parameters":{"dataTableId":{"__rl":true,"mode":"name","value":"ortho_events"},"columns":{"mappingMode":"defineBelow","value":{"event":"opt_out","phone":"={{ $('Normalize Inbound').item.json.phone }}","detail":"caller opted out - no further messages","at":"={{ $now.toISO() }}"},"schema":[{"id":"event","displayName":"event","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"phone","displayName":"phone","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"detail","displayName":"detail","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"at","displayName":"at","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true}]},"options":{}},"id":"f30e06ae-0ce0-41dd-acc4-23f8657eb85f","name":"Log Opt-Out","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[-304,528]},
-    {"parameters":{"operation":"get","dataTableId":{"__rl":true,"mode":"name","value":"ortho_conversations"},"matchType":"allConditions","filters":{"conditions":[{"keyName":"phone","keyValue":"={{ $('Normalize Inbound').item.json.phone }}"}]},"limit":1},"id":"6ddac6fe-fe4e-444a-aef5-52cca166daed","name":"Load Conversation","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[-528,832],"alwaysOutputData":true},
-    {"parameters":{"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"loose","version":1},"conditions":[{"leftValue":"={{ $json.phone ?? \"\" }}","operator":{"type":"string","operation":"notEmpty"}}],"combinator":"and"},"options":{}},"id":"eb4bcd6b-3dff-4833-8024-521f7d94df0f","name":"Known Conversation?","type":"n8n-nodes-base.if","typeVersion":2.3,"position":[-304,832]},
-    {"parameters":{"rules":{"values":[{"conditions":{"options":{"caseSensitive":false,"leftValue":"","typeValidation":"strict","version":1},"conditions":[{"leftValue":"={{ $json.state }}","operator":{"type":"string","operation":"equals"},"rightValue":"texted"}],"combinator":"and"},"renameOutput":true,"outputKey":"texted"},{"conditions":{"options":{"caseSensitive":false,"leftValue":"","typeValidation":"strict","version":1},"conditions":[{"leftValue":"={{ $json.state }}","operator":{"type":"string","operation":"equals"},"rightValue":"offered"}],"combinator":"and"},"renameOutput":true,"outputKey":"offered"}]},"options":{"fallbackOutput":"extra","renameFallbackOutput":"other states"}},"id":"7c57a543-6141-4799-9943-63b6563b69e1","name":"Route by State","type":"n8n-nodes-base.switch","typeVersion":3.4,"position":[-80,704]},
-    {"parameters":{"inputText":"={{ $('Normalize Inbound').item.json.text }}","categories":{"categories":[{"category":"NEW_PATIENT","description":"The sender is asking about becoming a new patient: consults, braces, aligners, pricing for treatment, or booking a first visit."},{"category":"EXISTING_PATIENT","description":"The sender is an existing patient: mentions their appointment, retainer, wire, bracket, pain, or ongoing treatment."},{"category":"QUESTION","description":"A general question about hours, insurance, location, or anything that is not clearly new-patient or existing-patient."}]},"options":{"fallback":"other"}},"id":"86e08b13-c4fd-4b81-841b-ffe9c4b3863c","name":"Classify Reply","type":"@n8n/n8n-nodes-langchain.textClassifier","typeVersion":1.1,"position":[144,240],"onError":"continueErrorOutput"},
-    {"parameters":{"model":{"__rl":true,"mode":"id","value":"qwen3.6-35b-a3b-mlx"},"responsesApiEnabled":false,"options":{"temperature":0,"timeout":30000,"maxRetries":1}},"id":"3b026df3-c79f-436e-afeb-de26bb11167a","name":"Local Model (LM Studio)","type":"@n8n/n8n-nodes-langchain.lmChatOpenAi","typeVersion":1.3,"position":[240,496]},
-    {"parameters":{"operation":"get","dataTableId":{"__rl":true,"mode":"name","value":"ortho_slots"},"matchType":"allConditions","filters":{"conditions":[{"keyName":"taken","condition":"isFalse"}]},"limit":2},"id":"9911daf1-071b-46f1-827b-f728727c3a96","name":"Get Open Slots","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[400,144],"alwaysOutputData":true},
-    {"parameters":{"jsCode":"const slots = $input.all().map(i => i.json).filter(r => r.slot_label);\nconst phone = $(\"Normalize Inbound\").first().json.phone;\nif (!slots.length) {\n  return [{ json: { has_slots: false, phone } }];\n}\nconst top = slots.slice(0, 2);\nconst lines = top.map((s, ix) => (ix + 1) + \") \" + s.slot_label).join(\"   \");\nreturn [{ json: {\n  has_slots: true,\n  phone,\n  offered_slots: top.map(s => s.slot_label).join(\"|\"),\n  sms_text: \"Great news - we have consult openings: \" + lines + \". Reply 1 or 2 to grab one, or reply with a day that works better.\",\n  event: \"offer_sent\"\n} }];"},"id":"25444fce-7865-485c-bcca-d8d905e5a72e","name":"Compose Slot Offer","type":"n8n-nodes-base.code","typeVersion":2,"position":[624,144]},
-    {"parameters":{"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"loose","version":1},"conditions":[{"leftValue":"={{ $json.has_slots }}","operator":{"type":"boolean","operation":"true"}}],"combinator":"and"},"options":{}},"id":"331dfb80-319d-449d-8b0e-588b1893ffb1","name":"Slots Available?","type":"n8n-nodes-base.if","typeVersion":2.3,"position":[848,144]},
-    {"parameters":{"operation":"upsert","dataTableId":{"__rl":true,"mode":"name","value":"ortho_conversations"},"matchType":"allConditions","filters":{"conditions":[{"keyName":"phone","keyValue":"={{ $('Normalize Inbound').item.json.phone }}"}]},"columns":{"mappingMode":"defineBelow","value":{"phone":"={{ $('Normalize Inbound').item.json.phone }}","state":"offered","patient_type":"new","last_message":"={{ $('Normalize Inbound').item.json.text }}","offered_slots":"={{ $('Compose Slot Offer').item.json.offered_slots }}","updated_at":"={{ $now.toISO() }}"},"schema":[{"id":"phone","displayName":"phone","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"state","displayName":"state","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"patient_type","displayName":"patient_type","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"last_message","displayName":"last_message","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"offered_slots","displayName":"offered_slots","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"updated_at","displayName":"updated_at","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true}]},"options":{}},"id":"a1225ce9-aadb-40e7-a4e9-b2babc0a3682","name":"Mark Offered","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[1072,48]},
-    {"parameters":{"assignments":{"assignments":[{"id":"so-phone","name":"phone","value":"={{ $('Compose Slot Offer').item.json.phone }}","type":"string"},{"id":"so-text","name":"sms_text","value":"={{ $('Compose Slot Offer').item.json.sms_text }}","type":"string"},{"id":"so-event","name":"event","value":"offer_sent","type":"string"}]},"options":{}},"id":"c5ccb685-0b90-4eb9-a308-c92d769a756a","name":"Stage Offer SMS","type":"n8n-nodes-base.set","typeVersion":3.4,"position":[1280,48]},
-    {"parameters":{"jsCode":"const conv = $(\"Load Conversation\").first().json;\nconst text = ($(\"Normalize Inbound\").first().json.text || \"\").trim().toLowerCase();\nconst offered = (conv.offered_slots || \"\").split(\"|\").filter(Boolean);\nlet slot = null;\nif (/^1\\b/.test(text) && offered[0]) { slot = offered[0]; }\nelse if (/^2\\b/.test(text) && offered[1]) { slot = offered[1]; }\nelse { slot = offered.find(s => text.includes(s.toLowerCase())) || null; }\nreturn [{ json: { matched: !!slot, slot_label: slot || \"\", phone: conv.phone } }];"},"id":"907cf9e9-93d0-4fde-811a-6fa9169b9de7","name":"Parse Slot Choice","type":"n8n-nodes-base.code","typeVersion":2,"position":[144,704]},
-    {"parameters":{"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"loose","version":1},"conditions":[{"leftValue":"={{ $json.matched }}","operator":{"type":"boolean","operation":"true"}}],"combinator":"and"},"options":{}},"id":"c551747e-45e2-46a5-abb2-011e86abe937","name":"Choice Matched?","type":"n8n-nodes-base.if","typeVersion":2.3,"position":[400,704]},
-    {"parameters":{"operation":"update","dataTableId":{"__rl":true,"mode":"name","value":"ortho_slots"},"matchType":"allConditions","filters":{"conditions":[{"keyName":"slot_label","keyValue":"={{ $('Parse Slot Choice').item.json.slot_label }}"},{"keyName":"taken","condition":"isFalse"}]},"columns":{"mappingMode":"defineBelow","value":{"taken":true,"booked_by":"={{ $('Parse Slot Choice').item.json.phone }}","booked_at":"={{ $now.toISO() }}"},"schema":[{"id":"taken","displayName":"taken","required":false,"defaultMatch":false,"display":true,"type":"boolean","canBeUsedToMatch":true},{"id":"booked_by","displayName":"booked_by","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"booked_at","displayName":"booked_at","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true}]},"options":{}},"id":"ff4c1775-b8dc-499d-b94d-b0b3a21e4e54","name":"Book Slot","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[624,624],"alwaysOutputData":true},
-    {"parameters":{"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"loose","version":1},"conditions":[{"id":"bs-1","leftValue":"={{ $json.slot_label ?? '' }}","rightValue":"","operator":{"type":"string","operation":"notEmpty","singleValue":true}}],"combinator":"and"},"options":{}},"id":"b00c1e2f-0000-4000-8000-bookguard001","name":"Booking Succeeded?","type":"n8n-nodes-base.if","typeVersion":2.3,"position":[736,624]},
-    {"parameters":{"dataTableId":{"__rl":true,"mode":"name","value":"ortho_events"},"columns":{"mappingMode":"defineBelow","value":{"event":"booking_confirmed","phone":"={{ $('Parse Slot Choice').item.json.phone }}","detail":"={{ $('Parse Slot Choice').item.json.slot_label }}","at":"={{ $now.toISO() }}"},"schema":[{"id":"event","displayName":"event","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"phone","displayName":"phone","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"detail","displayName":"detail","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"at","displayName":"at","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true}]},"options":{}},"id":"50fd97dc-3d4d-4ca4-9587-a733420c5ef0","name":"Log Booking","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[848,624]},
-    {"parameters":{"operation":"upsert","dataTableId":{"__rl":true,"mode":"name","value":"ortho_conversations"},"matchType":"allConditions","filters":{"conditions":[{"keyName":"phone","keyValue":"={{ $('Normalize Inbound').item.json.phone }}"}]},"columns":{"mappingMode":"defineBelow","value":{"phone":"={{ $('Normalize Inbound').item.json.phone }}","state":"booked","last_message":"={{ $('Normalize Inbound').item.json.text }}","updated_at":"={{ $now.toISO() }}"},"schema":[{"id":"phone","displayName":"phone","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"state","displayName":"state","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"last_message","displayName":"last_message","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"updated_at","displayName":"updated_at","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true}]},"options":{}},"id":"49742e4f-b4f8-4115-be76-4f3f03432a5e","name":"Mark Booked","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[1072,624]},
-    {"parameters":{"assignments":{"assignments":[{"id":"bc-phone","name":"phone","value":"={{ $('Parse Slot Choice').item.json.phone }}","type":"string"},{"id":"bc-text","name":"sms_text","value":"={{ 'Perfect - you are booked for ' + $('Parse Slot Choice').item.json.slot_label + '. We will text a reminder the day before. Reply here anytime.' }}","type":"string"},{"id":"bc-event","name":"event","value":"booking_confirm","type":"string"}]},"options":{}},"id":"ad0fb2d2-9a7c-4cf5-8a98-c6224661f9b8","name":"Stage Booking Confirm","type":"n8n-nodes-base.set","typeVersion":3.4,"position":[1280,624]},
-    {"parameters":{"dataTableId":{"__rl":true,"mode":"name","value":"ortho_queue"},"columns":{"mappingMode":"defineBelow","value":{"phone":"={{ $('Normalize Inbound').item.json.phone }}","reason":"needs_human","context":"={{ $('Normalize Inbound').item.json.text }}","status":"open","created_at":"={{ $now.toISO() }}"},"schema":[{"id":"phone","displayName":"phone","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"reason","displayName":"reason","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"context","displayName":"context","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"status","displayName":"status","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"created_at","displayName":"created_at","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true}]},"options":{}},"id":"79aa8f46-a979-4c57-bd4a-824b1300215d","name":"Queue for Callback","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[624,480]},
-    {"parameters":{"dataTableId":{"__rl":true,"mode":"name","value":"ortho_events"},"columns":{"mappingMode":"defineBelow","value":{"event":"queued_for_callback","phone":"={{ $('Normalize Inbound').item.json.phone }}","detail":"={{ $('Normalize Inbound').item.json.text }}","at":"={{ $now.toISO() }}"},"schema":[{"id":"event","displayName":"event","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"phone","displayName":"phone","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"detail","displayName":"detail","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"at","displayName":"at","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true}]},"options":{}},"id":"d879f5e3-d2f7-43b4-8d8f-c4b8a7bceefb","name":"Log Queued","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[848,480]},
-    {"parameters":{"operation":"upsert","dataTableId":{"__rl":true,"mode":"name","value":"ortho_conversations"},"matchType":"allConditions","filters":{"conditions":[{"keyName":"phone","keyValue":"={{ $('Normalize Inbound').item.json.phone }}"}]},"columns":{"mappingMode":"defineBelow","value":{"phone":"={{ $('Normalize Inbound').item.json.phone }}","state":"queued","last_message":"={{ $('Normalize Inbound').item.json.text }}","updated_at":"={{ $now.toISO() }}"},"schema":[{"id":"phone","displayName":"phone","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"state","displayName":"state","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"last_message","displayName":"last_message","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"updated_at","displayName":"updated_at","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true}]},"options":{}},"id":"5f74565d-9727-4327-a648-89ddeb2a7345","name":"Mark Queued","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[1072,480]},
-    {"parameters":{"assignments":{"assignments":[{"id":"qc-phone","name":"phone","value":"={{ $('Normalize Inbound').item.json.phone }}","type":"string"},{"id":"qc-text","name":"sms_text","value":"Got it - our team will call you shortly to help with that.","type":"string"},{"id":"qc-event","name":"event","value":"queue_confirm","type":"string"}]},"options":{}},"id":"dcb1951c-12c5-480e-8f9b-670e24c6151e","name":"Stage Queue Confirm","type":"n8n-nodes-base.set","typeVersion":3.4,"position":[1280,480]},
-    {"parameters":{"dataTableId":{"__rl":true,"mode":"name","value":"ortho_queue"},"columns":{"mappingMode":"defineBelow","value":{"phone":"={{ $('Normalize Inbound').item.json.phone }}","reason":"followup_message","context":"={{ $('Normalize Inbound').item.json.text }}","status":"open","created_at":"={{ $now.toISO() }}"},"schema":[{"id":"phone","displayName":"phone","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"reason","displayName":"reason","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"context","displayName":"context","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"status","displayName":"status","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"created_at","displayName":"created_at","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true}]},"options":{}},"id":"05b814f8-170c-4e00-873c-e29bb079779d","name":"Append to Queue","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[144,960]},
-    {"parameters":{"dataTableId":{"__rl":true,"mode":"name","value":"ortho_events"},"columns":{"mappingMode":"defineBelow","value":{"event":"inbound_logged","phone":"={{ $('Normalize Inbound').item.json.phone }}","detail":"={{ $('Normalize Inbound').item.json.text }}","at":"={{ $now.toISO() }}"},"schema":[{"id":"event","displayName":"event","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"phone","displayName":"phone","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"detail","displayName":"detail","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"at","displayName":"at","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true}]},"options":{}},"id":"d494d0ed-afa1-4fd4-abe3-d493ceb3d000","name":"Log Inbound Message","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[400,960]},
-    {"parameters":{"dataTableId":{"__rl":true,"mode":"name","value":"ortho_queue"},"columns":{"mappingMode":"defineBelow","value":{"phone":"={{ $('Normalize Inbound').item.json.phone }}","reason":"cold_inbound","context":"={{ $('Normalize Inbound').item.json.text }}","status":"open","created_at":"={{ $now.toISO() }}"},"schema":[{"id":"phone","displayName":"phone","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"reason","displayName":"reason","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"context","displayName":"context","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"status","displayName":"status","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"created_at","displayName":"created_at","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true}]},"options":{}},"id":"8dd7a761-00e5-4f9d-98bf-875cc63fb945","name":"Queue Cold Inbound","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[-80,1008]},
-    {"parameters":{"dataTableId":{"__rl":true,"mode":"name","value":"ortho_events"},"columns":{"mappingMode":"defineBelow","value":{"event":"cold_inbound","phone":"={{ $('Normalize Inbound').item.json.phone }}","detail":"={{ $('Normalize Inbound').item.json.text }}","at":"={{ $now.toISO() }}"},"schema":[{"id":"event","displayName":"event","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"phone","displayName":"phone","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"detail","displayName":"detail","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"at","displayName":"at","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true}]},"options":{}},"id":"01af99b8-f6a7-4d01-ba27-d260186a53dc","name":"Log Cold Inbound","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[144,1008]},
-    {"parameters":{"jsCode":"const t = ($('Normalize Inbound').first().json.text || '').trim();\nconst m = t.match(/^(?:text|send|msg)\\s+(\\+?[\\d\\-\\s().]{8,})\\s*[:\\-]\\s*(.+)$/i);\nif (m) {\n  const to = '+' + m[1].replace(/[^\\d]/g, '');\n  return [{ json: { mode: 'relay', to, message: m[2].trim() } }];\n}\nreturn [{ json: { mode: 'ask', question: t } }];"},"id":"2b31eba7-bb33-4ad2-9171-e954509ed035","name":"Admin Command Parse","type":"n8n-nodes-base.code","typeVersion":2,"position":[-304,1168]},
-    {"parameters":{"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict","version":1},"conditions":[{"id":"rel-1","leftValue":"={{ $json.mode }}","rightValue":"relay","operator":{"type":"string","operation":"equals"}}],"combinator":"and"},"options":{}},"id":"8c615708-0420-497c-af8a-c15bd12d4d89","name":"Admin Relay?","type":"n8n-nodes-base.if","typeVersion":2.3,"position":[-160,1168]},
-    {"parameters":{"dataTableId":{"__rl":true,"mode":"name","value":"ortho_events"},"columns":{"mappingMode":"defineBelow","matchingColumns":[],"value":{"event":"admin_relay","phone":"={{ $('Admin Command Parse').item.json.to }}","detail":"={{ 'from admin: ' + $('Admin Command Parse').item.json.message }}","at":"={{ $now.toISO() }}"},"schema":[{"id":"event","displayName":"event","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"phone","displayName":"phone","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"detail","displayName":"detail","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"at","displayName":"at","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true}]},"options":{}},"id":"a54fe15e-4a74-4f5c-992f-f92050bb602c","name":"Log Admin Relay","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[144,1088]},
-    {"parameters":{"assignments":{"assignments":[{"id":"ar-1","name":"phone","value":"={{ $('Admin Command Parse').item.json.to }}","type":"string"},{"id":"ar-2","name":"sms_text","value":"={{ $('Admin Command Parse').item.json.message }}","type":"string"},{"id":"ar-3","name":"event","value":"admin_relay","type":"string"}]},"options":{}},"id":"0ba9560b-831a-4efc-afc8-93bddf15632c","name":"Stage Relay SMS","type":"n8n-nodes-base.set","typeVersion":3.4,"position":[368,1088]},
-    {"parameters":{"operation":"get","dataTableId":{"__rl":true,"mode":"name","value":"ortho_conversations"},"returnAll":true},"id":"99ef0060-5a73-43ab-8a56-f4187cedca49","name":"Ctx Conversations","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[144,1280],"alwaysOutputData":true,"executeOnce":true},
-    {"parameters":{"operation":"get","dataTableId":{"__rl":true,"mode":"name","value":"ortho_queue"},"returnAll":true},"id":"704d1ff9-0fe1-4f07-a17b-4a9f7f669a0a","name":"Ctx Queue","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[320,1280],"alwaysOutputData":true,"executeOnce":true},
-    {"parameters":{"operation":"get","dataTableId":{"__rl":true,"mode":"name","value":"ortho_events"},"limit":30,"orderBy":true},"id":"b551d16c-7bab-4801-b9c5-1b44ca6669b3","name":"Ctx Events","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[512,1280],"alwaysOutputData":true,"executeOnce":true},
-    {"parameters":{"operation":"get","dataTableId":{"__rl":true,"mode":"name","value":"ortho_slots"},"returnAll":true},"id":"b969b650-cc2c-4d2d-956c-6aa355c4b77f","name":"Ctx Slots","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[688,1280],"alwaysOutputData":true,"executeOnce":true},
-    {"parameters":{"resource":"row","operation":"get","dataTableId":{"__rl":true,"mode":"name","value":"ortho_practice_facts"},"returnAll":true},"id":"4da776e5-ab27-48c9-b96b-ac0c6f567adc","name":"Ctx Practice Facts","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[860,1440],"alwaysOutputData":true,"executeOnce":true},
-    {"parameters":{"jsCode":"const q = $('Admin Command Parse').first().json.question || '';\nconst rows = (name) => { try { return $(name).all().map(i => i.json); } catch (e) { return []; } };\nconst facts = rows('Ctx Practice Facts').filter(r => r.key).map(r => (r.category ? ('[' + r.category + '] ') : '') + r.key + ': ' + r.value).join('\\n') || 'none';\nconst convs = rows('Ctx Conversations').filter(r => r.phone).slice(0, 15).map(r => r.phone + ' state=' + r.state + ' type=' + (r.patient_type || '-') + ' last=\"' + ((r.last_message || '').slice(0, 60)) + '\" upd=' + (r.updated_at || '')).join('\\n') || 'none';\nconst queue = rows('Ctx Queue').filter(r => r.phone && r.status === 'open').slice(0, 15).map(r => r.phone + ' [' + r.reason + '] \"' + ((r.context || '').slice(0, 70)) + '\" ' + (r.created_at || '')).join('\\n') || 'empty';\nconst events = rows('Ctx Events').filter(r => r.event).slice(0, 30).map(r => (r.at || '') + ' ' + r.event + ' ' + (r.phone || '') + ' ' + ((r.detail || '').slice(0, 60))).join('\\n') || 'none';\nconst slots = rows('Ctx Slots').filter(r => r.slot_label).map(r => r.slot_label + ' ' + (r.taken ? ('TAKEN by ' + (r.booked_by || '?')) : 'open')).join('\\n') || 'none';\nconst prompt = 'You are the admin assistant for this practice, replying to the practice owner by SMS. Answer using ONLY the data below. Be specific and brief (under 450 characters), plain text, no markdown. If the data cannot answer, say so and name what is missing. Never invent patients, numbers, fees, or events.\\n\\nOWNER QUESTION: ' + q + '\\n\\nPRACTICE FACTS (identity, hours, insurance, fees, policies):\\n' + facts + '\\n\\nOPEN CALLBACK QUEUE:\\n' + queue + '\\n\\nCONVERSATIONS:\\n' + convs + '\\n\\nRECENT EVENTS (newest first):\\n' + events + '\\n\\nCONSULT SLOTS:\\n' + slots;\nreturn [{ json: { question: q, prompt } }];"},"id":"c5c462c6-af96-41ed-92bd-ac15fe2461a9","name":"Assemble Admin Context","type":"n8n-nodes-base.code","typeVersion":2,"position":[864,1280]},
-    {"parameters":{"model":{"__rl":true,"mode":"id","value":"qwen3.6-35b-a3b-mlx"},"responsesApiEnabled":false,"options":{"temperature":0.2,"timeout":45000,"maxRetries":1}},"id":"1df07a09-2348-4b0e-b7dd-c7f40bfe863e","name":"Admin Model","type":"@n8n/n8n-nodes-langchain.lmChatOpenAi","typeVersion":1.3,"position":[1024,1440]},
-    {"parameters":{"sessionIdType":"customKey","sessionKey":"={{ 'admin-' + $('Normalize Inbound').item.json.phone }}","contextWindowLength":8},"id":"6afd4dd5-6225-4546-9ed0-abdc59ee3f38","name":"Admin Memory","type":"@n8n/n8n-nodes-langchain.memoryBufferWindow","typeVersion":1.4,"position":[1200,1440]},
-    {"parameters":{"promptType":"define","text":"={{ $json.prompt }}","options":{"systemMessage":"You are a concise practice admin assistant. Reply in plain SMS text.","maxIterations":5,"enableStreaming":false}},"id":"e24cab89-05ce-43e7-b1a1-1c406bd00f20","name":"Admin Brain","type":"@n8n/n8n-nodes-langchain.agent","typeVersion":3.1,"position":[1088,1280]},
-    {"parameters":{"assignments":{"assignments":[{"id":"aa-1","name":"phone","value":"={{ $('Normalize Inbound').item.json.phone }}","type":"string"},{"id":"aa-2","name":"sms_text","value":"={{ $json.output }}","type":"string"},{"id":"aa-3","name":"event","value":"admin_answer","type":"string"}]},"options":{}},"id":"7104578f-12cb-4554-b141-a6b3ec99835a","name":"Stage Admin Reply","type":"n8n-nodes-base.set","typeVersion":3.4,"position":[1328,1280]},
-    {"parameters":{"rule":{"interval":[{"triggerAtHour":7}]}},"id":"ab36d6be-25b5-4ae9-b071-8527739e7de9","name":"Owner Digest 7AM","type":"n8n-nodes-base.scheduleTrigger","typeVersion":1.3,"position":[-1184,1504]},
-    {"parameters":{"operation":"get","dataTableId":{"__rl":true,"mode":"name","value":"ortho_events"},"returnAll":true},"id":"502d4abe-41c2-40da-aec4-7fcda02784f9","name":"Get Recent Events","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[-960,1504],"alwaysOutputData":true},
-    {"parameters":{"jsCode":"const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();\nconst events = $input.all().map(i => i.json).filter(e => e.event && e.at && e.at >= cutoff);\nconst count = k => events.filter(e => e.event === k).length;\nconst missed = count(\"missed_call\");\nconst textedBack = count(\"sms_sent\") + count(\"sms_simulated\");\nconst booked = count(\"booking_confirmed\");\nconst queued = count(\"queued_for_callback\") + count(\"cold_inbound\") + count(\"inbound_logged\");\nconst optOuts = count(\"opt_out\");\nconst rows = [\n  [\"Missed calls caught\", missed],\n  [\"Text-backs + replies sent\", textedBack],\n  [\"Consults booked by text\", booked],\n  [\"Handed to front desk\", queued],\n  [\"Opt-outs\", optOuts]\n].map(r => \"<tr><td style=\\\"padding:6px 14px 6px 0\\\">\" + r[0] + \"</td><td style=\\\"padding:6px 0;font-weight:bold\\\">\" + r[1] + \"</td></tr>\").join(\"\");\nconst html = \"<div style=\\\"font-family:Arial,sans-serif;font-size:14px;color:#1a2332\\\">\" +\n  \"<h2 style=\\\"margin:0 0 4px\\\">Practice digest - last 24 hours</h2>\" +\n  \"<p style=\\\"margin:0 0 14px;color:#5d6b80\\\">Missed-call recovery mock. Every number below is traceable in ortho_events.</p>\" +\n  \"<table style=\\\"border-collapse:collapse\\\">\" + rows + \"</table>\" +\n  \"<p style=\\\"margin:14px 0 0;color:#5d6b80\\\">\" + (booked > 0 ? \"Every booking here started as a call nobody answered.\" : \"No bookings in this window - queue and templates are ready.\") + \"</p></div>\";\nreturn [{ json: {\n  subject: \"Practice digest - \" + missed + \" missed calls caught, \" + booked + \" consults booked\",\n  html\n} }];"},"id":"78e69784-9173-4756-81bb-0285ac1bbcdf","name":"Build Digest","type":"n8n-nodes-base.code","typeVersion":2,"position":[-736,1504]},
-    {"parameters":{"sendTo":"owner@example.com","subject":"={{ $json.subject }}","message":"={{ $json.html }}","options":{"appendAttribution":false,"senderName":"Practice Automation OS"},"resource":"message","operation":"send"},"id":"6f347265-606f-4fcb-87a8-c736c86248b6","name":"Send Owner Digest","type":"n8n-nodes-base.gmail","typeVersion":2.2,"position":[-528,1504]},
-    {"parameters":{"dataTableId":{"__rl":true,"mode":"name","value":"ortho_events"},"columns":{"mappingMode":"defineBelow","value":{"event":"digest_sent","phone":"","detail":"={{ $('Build Digest').item.json.subject }}","at":"={{ $now.toISO() }}"},"schema":[{"id":"event","displayName":"event","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"phone","displayName":"phone","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"detail","displayName":"detail","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true},{"id":"at","displayName":"at","required":false,"defaultMatch":false,"display":true,"type":"string","canBeUsedToMatch":true}]},"options":{}},"id":"4c43b025-ff18-43c7-95d6-30cf4869982f","name":"Log Digest Sent","type":"n8n-nodes-base.dataTable","typeVersion":1.1,"position":[-304,1504]},
-    {"parameters":{"content":"# Practice Front-Office Agent (demo)\n\nDe-branded vertical product template with fictional demo data. **Swap map for a real deployment:**\n- Missed Call Webhook <- phone system missed-call event subscription\n- Inbound SMS Webhook <- phone system / SMS provider inbound hook\n- ortho_slots + booking <- PMS API (open-slot query + appointment write)\n- Twilio sender <- the practice's own number\n\nSynthetic data only. No PHI. State machine: texted -> offered -> booked / queued / opted_out.","height":220,"width":520,"color":4},"id":"5e235535-fd81-4525-91d7-f6e995b03f0e","name":"Sticky Overview","type":"n8n-nodes-base.stickyNote","typeVersion":1,"position":[-1184,-528]},
-    {"parameters":{"content":"## Send gate\nEvery outbound SMS passes this IF. Ships in **simulate** mode: messages log as sms_simulated, nothing sends.\n\nTo go live: change the left value from `simulate` to `live` and set the Twilio From number.\n\nTemplates only - anything templates can't answer routes to the human queue by design.","height":400,"width":540,"color":3},"id":"f3005353-16ef-449b-9459-3362d222ee79","name":"Sticky Send Gate","type":"n8n-nodes-base.stickyNote","typeVersion":1,"position":[-48,-656]},
-    {"parameters":{"content":"## Reply triage\nAny OpenAI-compatible model (local via LM Studio, or a BAA-covered cloud model in production). If the model is down or unsure, error/other outputs route to Queue for Callback - a human always catches what AI drops. STOP is handled rule-based BEFORE any AI sees the text.","height":200,"width":300,"color":5},"id":"17c7f1b3-8182-449f-b669-2a74df4ed8d8","name":"Sticky Triage","type":"n8n-nodes-base.stickyNote","typeVersion":1,"position":[-416,176]},
-    {"parameters":{"content":"## Owner digest\nDaily 7:00 summary of the last 24h of events, emailed to the owner. No dashboards, no logins.","height":200,"width":740,"color":6},"id":"c97b48ee-9c26-4917-9909-15fd5853f192","name":"Sticky Digest","type":"n8n-nodes-base.stickyNote","typeVersion":1,"position":[-1904,368]},
-    {"parameters":{"content":"## Admin section - the owner's SMS command line\nSender phone is checked against ortho_admins. Admins get two powers:\n1) **Relay**: `text +1555...: message` sends to that patient (through the send gate).\n2) **Ask anything**: full practice state (facts, queue, conversations, events, slots) is assembled and answered by the model, SMS-length, with per-admin memory.\n\nReplace the seeded demo admin number with the real owner's cell. Production hardening: role-based admin powers + PIN step-up. Everything an admin does is logged.","height":240,"width":460,"color":2},"id":"f63e9682-6482-4e95-b7bc-c92bb27df224","name":"Sticky Admin","type":"n8n-nodes-base.stickyNote","typeVersion":1,"position":[-1488,1136]}
-  ],
-  "connections":{"Save Conversation (texted)":{"main":[[{"node":"Log Missed Call","type":"main","index":0}]]},"Log Missed Call":{"main":[[{"node":"Compose Text-Back","type":"main","index":0}]]},"Compose Text-Back":{"main":[[{"node":"Send Mode: live?","type":"main","index":0}]]},"Send Mode: live?":{"main":[[{"node":"Send SMS (Twilio)","type":"main","index":0}],[{"node":"Log SMS Simulated","type":"main","index":0}]]},"Send SMS (Twilio)":{"main":[[{"node":"Log SMS Sent","type":"main","index":0}]]},"Opt-Out?":{"main":[[{"node":"Record Opt-Out","type":"main","index":0}],[{"node":"Load Conversation","type":"main","index":0}]]},"Record Opt-Out":{"main":[[{"node":"Log Opt-Out","type":"main","index":0}]]},"Load Conversation":{"main":[[{"node":"Known Conversation?","type":"main","index":0}]]},"Known Conversation?":{"main":[[{"node":"Route by State","type":"main","index":0}],[{"node":"Queue Cold Inbound","type":"main","index":0}]]},"Route by State":{"main":[[{"node":"Classify Reply","type":"main","index":0}],[{"node":"Parse Slot Choice","type":"main","index":0}],[{"node":"Append to Queue","type":"main","index":0}]]},"Classify Reply":{"main":[[{"node":"Get Open Slots","type":"main","index":0}],[{"node":"Queue for Callback","type":"main","index":0}],[{"node":"Queue for Callback","type":"main","index":0}],[{"node":"Queue for Callback","type":"main","index":0}]]},"Local Model (LM Studio)":{"ai_languageModel":[[{"node":"Classify Reply","type":"ai_languageModel","index":0}]]},"Parse Slot Choice":{"main":[[{"node":"Choice Matched?","type":"main","index":0}]]},"Choice Matched?":{"main":[[{"node":"Book Slot","type":"main","index":0}],[{"node":"Queue for Callback","type":"main","index":0}]]},"Book Slot":{"main":[[{"node":"Booking Succeeded?","type":"main","index":0}]]},"Booking Succeeded?":{"main":[[{"node":"Log Booking","type":"main","index":0}],[{"node":"Get Open Slots","type":"main","index":0}]]},"Log Booking":{"main":[[{"node":"Mark Booked","type":"main","index":0}]]},"Mark Booked":{"main":[[{"node":"Stage Booking Confirm","type":"main","index":0}]]},"Stage Booking Confirm":{"main":[[{"node":"Send Mode: live?","type":"main","index":0}]]},"Queue for Callback":{"main":[[{"node":"Log Queued","type":"main","index":0}]]},"Append to Queue":{"main":[[{"node":"Log Inbound Message","type":"main","index":0}]]},"Queue Cold Inbound":{"main":[[{"node":"Log Cold Inbound","type":"main","index":0}]]},"Get Open Slots":{"main":[[{"node":"Compose Slot Offer","type":"main","index":0}]]},"Compose Slot Offer":{"main":[[{"node":"Slots Available?","type":"main","index":0}]]},"Slots Available?":{"main":[[{"node":"Mark Offered","type":"main","index":0}],[{"node":"Queue for Callback","type":"main","index":0}]]},"Mark Offered":{"main":[[{"node":"Stage Offer SMS","type":"main","index":0}]]},"Stage Offer SMS":{"main":[[{"node":"Send Mode: live?","type":"main","index":0}]]},"Log Queued":{"main":[[{"node":"Mark Queued","type":"main","index":0}]]},"Mark Queued":{"main":[[{"node":"Stage Queue Confirm","type":"main","index":0}]]},"Stage Queue Confirm":{"main":[[{"node":"Send Mode: live?","type":"main","index":0}]]},"Owner Digest 7AM":{"main":[[{"node":"Get Recent Events","type":"main","index":0}]]},"Get Recent Events":{"main":[[{"node":"Build Digest","type":"main","index":0}]]},"Build Digest":{"main":[[{"node":"Send Owner Digest","type":"main","index":0}]]},"Send Owner Digest":{"main":[[{"node":"Log Digest Sent","type":"main","index":0}]]},"Missed Call Webhook":{"main":[[{"node":"Normalize Missed Call","type":"main","index":0}]]},"Normalize Missed Call":{"main":[[{"node":"Save Conversation (texted)","type":"main","index":0}]]},"Inbound SMS Webhook":{"main":[[{"node":"Normalize Inbound","type":"main","index":0}]]},"Normalize Inbound":{"main":[[{"node":"Admin Check","type":"main","index":0}]]},"Admin Check":{"main":[[{"node":"Is Admin?","type":"main","index":0}]]},"Is Admin?":{"main":[[{"node":"Admin Command Parse","type":"main","index":0}],[{"node":"Opt-Out?","type":"main","index":0}]]},"Admin Command Parse":{"main":[[{"node":"Admin Relay?","type":"main","index":0}]]},"Admin Relay?":{"main":[[{"node":"Log Admin Relay","type":"main","index":0}],[{"node":"Ctx Conversations","type":"main","index":0}]]},"Log Admin Relay":{"main":[[{"node":"Stage Relay SMS","type":"main","index":0}]]},"Stage Relay SMS":{"main":[[{"node":"Send Mode: live?","type":"main","index":0}]]},"Ctx Conversations":{"main":[[{"node":"Ctx Queue","type":"main","index":0}]]},"Ctx Queue":{"main":[[{"node":"Ctx Events","type":"main","index":0}]]},"Ctx Events":{"main":[[{"node":"Ctx Slots","type":"main","index":0}]]},"Ctx Slots":{"main":[[{"node":"Ctx Practice Facts","type":"main","index":0}]]},"Ctx Practice Facts":{"main":[[{"node":"Assemble Admin Context","type":"main","index":0}]]},"Assemble Admin Context":{"main":[[{"node":"Admin Brain","type":"main","index":0}]]},"Admin Model":{"ai_languageModel":[[{"node":"Admin Brain","type":"ai_languageModel","index":0}]]},"Admin Memory":{"ai_memory":[[{"node":"Admin Brain","type":"ai_memory","index":0}]]},"Admin Brain":{"main":[[{"node":"Stage Admin Reply","type":"main","index":0}]]},"Stage Admin Reply":{"main":[[{"node":"Send Mode: live?","type":"main","index":0}]]}}
+ "name": "Practice Front-Office Agent (ortho demo)",
+ "settings": {
+  "executionOrder": "v1"
+ },
+ "pinData": {},
+ "nodes": [
+  {
+   "parameters": {
+    "httpMethod": "POST",
+    "path": "ortho-missed-call",
+    "options": {}
+   },
+   "id": "ca59be6c-5874-44d4-aec4-ac6f61c71f3c",
+   "name": "Missed Call Webhook",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2.1,
+   "position": [
+    -1184,
+    -240
+   ]
+  },
+  {
+   "parameters": {
+    "operation": "upsert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_conversations"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "phone",
+       "keyValue": "={{ $('Normalize Missed Call').item.json.phone }}"
+      }
+     ]
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "phone": "={{ $('Normalize Missed Call').item.json.phone }}",
+      "state": "texted",
+      "patient_type": "",
+      "last_message": "",
+      "offered_slots": "",
+      "updated_at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "state",
+       "displayName": "state",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "patient_type",
+       "displayName": "patient_type",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "last_message",
+       "displayName": "last_message",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "offered_slots",
+       "displayName": "offered_slots",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "updated_at",
+       "displayName": "updated_at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "21bec91c-51db-4734-82a9-5472118d4370",
+   "name": "Save Conversation (texted)",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -736,
+    -240
+   ]
+  },
+  {
+   "parameters": {
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "event": "missed_call",
+      "phone": "={{ $('Normalize Missed Call').item.json.phone }}",
+      "detail": "={{ 'call ' + $('Normalize Missed Call').item.json.call_id }}",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "0f039eed-1fe8-47e4-8f01-520ee7c8ed8e",
+   "name": "Log Missed Call",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -528,
+    -240
+   ]
+  },
+  {
+   "parameters": {
+    "assignments": {
+     "assignments": [
+      {
+       "id": "tb-phone",
+       "name": "phone",
+       "value": "={{ $('Normalize Missed Call').item.json.phone }}",
+       "type": "string"
+      },
+      {
+       "id": "tb-text",
+       "name": "sms_text",
+       "value": "Sorry we missed your call! This is Harborline Orthodontics - want us to call you right back, or are you looking to set up a free consult? Just reply here.",
+       "type": "string"
+      },
+      {
+       "id": "tb-event",
+       "name": "event",
+       "value": "text_back",
+       "type": "string"
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "cbf2e090-94f6-47df-ac75-569370e2fe00",
+   "name": "Compose Text-Back",
+   "type": "n8n-nodes-base.set",
+   "typeVersion": 3.4,
+   "position": [
+    -304,
+    -240
+   ]
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "strict",
+      "version": 1
+     },
+     "conditions": [
+      {
+       "leftValue": "simulate",
+       "operator": {
+        "type": "string",
+        "operation": "equals"
+       },
+       "rightValue": "live"
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   },
+   "id": "204875f5-bdb4-428f-aeee-f4b75723bbe4",
+   "name": "Send Mode: live?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.3,
+   "position": [
+    32,
+    -64
+   ]
+  },
+  {
+   "parameters": {
+    "from": "<__PLACEHOLDER_VALUE__Practice SMS number, e.g. +1813XXXXXXX__>",
+    "to": "={{ $json.phone }}",
+    "message": "={{ $json.sms_text }}",
+    "options": {}
+   },
+   "id": "6980af89-72ff-4be0-8e3e-ff03aeda4d77",
+   "name": "Send SMS (Twilio)",
+   "type": "n8n-nodes-base.twilio",
+   "typeVersion": 1,
+   "position": [
+    272,
+    -160
+   ]
+  },
+  {
+   "parameters": {
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "event": "sms_sent",
+      "phone": "={{ $('Send Mode: live?').item.json.phone }}",
+      "detail": "={{ $('Send Mode: live?').item.json.event + ': ' + $('Send Mode: live?').item.json.sms_text }}",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "4ffcd4ca-6e3d-4912-826d-8fff2b0fd927",
+   "name": "Log SMS Sent",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    512,
+    -160
+   ]
+  },
+  {
+   "parameters": {
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "event": "sms_simulated",
+      "phone": "={{ $json.phone }}",
+      "detail": "={{ $json.event + ': ' + $json.sms_text }}",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "651f25f6-27a4-43e3-a693-f6a067305bf8",
+   "name": "Log SMS Simulated",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    272,
+    48
+   ]
+  },
+  {
+   "parameters": {
+    "httpMethod": "POST",
+    "path": "ortho-inbound-sms",
+    "options": {}
+   },
+   "id": "6da7451b-8007-4938-8229-0d26d7235ec5",
+   "name": "Inbound SMS Webhook",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2.1,
+   "position": [
+    -1184,
+    704
+   ]
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": false,
+      "leftValue": "",
+      "typeValidation": "strict",
+      "version": 1
+     },
+     "conditions": [
+      {
+       "leftValue": "={{ ($('Normalize Inbound').item.json.text || '').trim().toLowerCase() }}",
+       "operator": {
+        "type": "string",
+        "operation": "regex"
+       },
+       "rightValue": "^(stop|unsubscribe|end|quit|cancel)$"
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   },
+   "id": "8a621a99-a570-4c48-b8f9-efd6fed6cbc0",
+   "name": "Opt-Out?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.3,
+   "position": [
+    -736,
+    704
+   ]
+  },
+  {
+   "parameters": {
+    "operation": "upsert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_conversations"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "phone",
+       "keyValue": "={{ $('Normalize Inbound').item.json.phone }}"
+      }
+     ]
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "phone": "={{ $('Normalize Inbound').item.json.phone }}",
+      "state": "opted_out",
+      "last_message": "={{ $('Normalize Inbound').item.json.text }}",
+      "updated_at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "state",
+       "displayName": "state",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "last_message",
+       "displayName": "last_message",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "updated_at",
+       "displayName": "updated_at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "8b06d7b6-1a49-493f-a7a1-b2d2381bf933",
+   "name": "Record Opt-Out",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -528,
+    528
+   ]
+  },
+  {
+   "parameters": {
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "event": "opt_out",
+      "phone": "={{ $('Normalize Inbound').item.json.phone }}",
+      "detail": "caller opted out - no further messages",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "f30e06ae-0ce0-41dd-acc4-23f8657eb85f",
+   "name": "Log Opt-Out",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -304,
+    528
+   ]
+  },
+  {
+   "parameters": {
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_conversations"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "phone",
+       "keyValue": "={{ $('Normalize Inbound').item.json.phone }}"
+      }
+     ]
+    },
+    "limit": 1
+   },
+   "id": "6ddac6fe-fe4e-444a-aef5-52cca166daed",
+   "name": "Load Conversation",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -528,
+    832
+   ],
+   "alwaysOutputData": true
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose",
+      "version": 1
+     },
+     "conditions": [
+      {
+       "leftValue": "={{ $json.phone ?? \"\" }}",
+       "operator": {
+        "type": "string",
+        "operation": "notEmpty"
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   },
+   "id": "eb4bcd6b-3dff-4833-8024-521f7d94df0f",
+   "name": "Known Conversation?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.3,
+   "position": [
+    -304,
+    832
+   ]
+  },
+  {
+   "parameters": {
+    "rules": {
+     "values": [
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.state }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "texted"
+         }
+        ],
+        "combinator": "and"
+       },
+       "renameOutput": true,
+       "outputKey": "texted"
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.state }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "offered"
+         }
+        ],
+        "combinator": "and"
+       },
+       "renameOutput": true,
+       "outputKey": "offered"
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.state }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "booked"
+         }
+        ],
+        "combinator": "and"
+       },
+       "renameOutput": true,
+       "outputKey": "booked"
+      }
+     ]
+    },
+    "options": {
+     "fallbackOutput": "extra",
+     "renameFallbackOutput": "other states"
+    }
+   },
+   "id": "7c57a543-6141-4799-9943-63b6563b69e1",
+   "name": "Route by State",
+   "type": "n8n-nodes-base.switch",
+   "typeVersion": 3.4,
+   "position": [
+    -80,
+    704
+   ]
+  },
+  {
+   "parameters": {
+    "inputText": "={{ $('Normalize Inbound').item.json.text }}",
+    "categories": {
+     "categories": [
+      {
+       "category": "NEW_PATIENT",
+       "description": "The sender is asking about becoming a new patient: consults, braces, aligners, pricing for treatment, or booking a first visit."
+      },
+      {
+       "category": "EXISTING_PATIENT",
+       "description": "The sender is an existing patient with a clinical or treatment matter: retainer, wire, bracket, pain, or ongoing treatment."
+      },
+      {
+       "category": "QUESTION",
+       "description": "A general question about hours, insurance, location, prices, or anything informational that is not clearly new-patient or existing-patient."
+      },
+      {
+       "category": "RESCHEDULE_CANCEL",
+       "description": "The sender wants to change, move, reschedule, or cancel an existing appointment or consult time."
+      }
+     ]
+    },
+    "options": {
+     "fallback": "other"
+    }
+   },
+   "id": "86e08b13-c4fd-4b81-841b-ffe9c4b3863c",
+   "name": "Classify Reply",
+   "type": "@n8n/n8n-nodes-langchain.textClassifier",
+   "typeVersion": 1.1,
+   "position": [
+    144,
+    240
+   ],
+   "onError": "continueErrorOutput"
+  },
+  {
+   "parameters": {
+    "model": {
+     "__rl": true,
+     "mode": "id",
+     "value": "qwen3.6-35b-a3b-mlx"
+    },
+    "responsesApiEnabled": false,
+    "options": {
+     "temperature": 0,
+     "timeout": 30000,
+     "maxRetries": 1
+    }
+   },
+   "id": "3b026df3-c79f-436e-afeb-de26bb11167a",
+   "name": "Local Model (LM Studio)",
+   "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+   "typeVersion": 1.3,
+   "position": [
+    240,
+    496
+   ]
+  },
+  {
+   "parameters": {
+    "jsCode": "const conv = $(\"Load Conversation\").first().json;\nconst text = ($(\"Normalize Inbound\").first().json.text || \"\").trim().toLowerCase();\nconst offered = (conv.offered_slots || \"\").split(\"|\").filter(Boolean);\nlet slot = null;\nif (/^1\\b/.test(text) && offered[0]) { slot = offered[0]; }\nelse if (/^2\\b/.test(text) && offered[1]) { slot = offered[1]; }\nelse { slot = offered.find(s => text.includes(s.toLowerCase())) || null; }\nreturn [{ json: { matched: !!slot, slot_label: slot || \"\", phone: conv.phone } }];"
+   },
+   "id": "907cf9e9-93d0-4fde-811a-6fa9169b9de7",
+   "name": "Parse Slot Choice",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    144,
+    704
+   ]
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose",
+      "version": 1
+     },
+     "conditions": [
+      {
+       "leftValue": "={{ $json.matched }}",
+       "operator": {
+        "type": "boolean",
+        "operation": "true"
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   },
+   "id": "c551747e-45e2-46a5-abb2-011e86abe937",
+   "name": "Choice Matched?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.3,
+   "position": [
+    400,
+    704
+   ]
+  },
+  {
+   "parameters": {
+    "operation": "update",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_slots"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "slot_label",
+       "condition": "eq",
+       "keyValue": "={{ $('Parse Slot Choice').item.json.slot_label }}"
+      },
+      {
+       "keyName": "taken",
+       "condition": "isFalse"
+      }
+     ]
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "taken": true,
+      "booked_by": "={{ $('Parse Slot Choice').item.json.phone }}",
+      "booked_at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "taken",
+       "displayName": "taken",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "boolean",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "booked_by",
+       "displayName": "booked_by",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "booked_at",
+       "displayName": "booked_at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "ff4c1775-b8dc-499d-b94d-b0b3a21e4e54",
+   "name": "Book Slot",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    624,
+    624
+   ],
+   "alwaysOutputData": true
+  },
+  {
+   "parameters": {
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "event": "booking_confirmed",
+      "phone": "={{ $('Parse Slot Choice').item.json.phone }}",
+      "detail": "={{ $('Parse Slot Choice').item.json.slot_label }}",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "50fd97dc-3d4d-4ca4-9587-a733420c5ef0",
+   "name": "Log Booking",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    848,
+    624
+   ]
+  },
+  {
+   "parameters": {
+    "operation": "upsert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_conversations"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "phone",
+       "keyValue": "={{ $('Normalize Inbound').item.json.phone }}"
+      }
+     ]
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "phone": "={{ $('Normalize Inbound').item.json.phone }}",
+      "state": "booked",
+      "last_message": "={{ $('Normalize Inbound').item.json.text }}",
+      "updated_at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "state",
+       "displayName": "state",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "last_message",
+       "displayName": "last_message",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "updated_at",
+       "displayName": "updated_at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "49742e4f-b4f8-4115-be76-4f3f03432a5e",
+   "name": "Mark Booked",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    1072,
+    624
+   ]
+  },
+  {
+   "parameters": {
+    "assignments": {
+     "assignments": [
+      {
+       "id": "bc-phone",
+       "name": "phone",
+       "value": "={{ $('Parse Slot Choice').item.json.phone }}",
+       "type": "string"
+      },
+      {
+       "id": "bc-text",
+       "name": "sms_text",
+       "value": "={{ 'Perfect - you are booked for ' + $('Parse Slot Choice').item.json.slot_label + '. We will text a reminder the day before. One more thing: your new-patient forms take 5 minutes from your phone - ' + 'https://forms.harborlineortho.example/new-patient' }}",
+       "type": "string"
+      },
+      {
+       "id": "bc-event",
+       "name": "event",
+       "value": "booking_confirm",
+       "type": "string"
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "ad0fb2d2-9a7c-4cf5-8a98-c6224661f9b8",
+   "name": "Stage Booking Confirm",
+   "type": "n8n-nodes-base.set",
+   "typeVersion": 3.4,
+   "position": [
+    1280,
+    624
+   ]
+  },
+  {
+   "parameters": {
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_queue"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "phone": "={{ $('Normalize Inbound').item.json.phone }}",
+      "reason": "needs_human",
+      "context": "={{ $('Normalize Inbound').item.json.text }}",
+      "status": "open",
+      "created_at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "reason",
+       "displayName": "reason",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "context",
+       "displayName": "context",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "status",
+       "displayName": "status",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "created_at",
+       "displayName": "created_at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "79aa8f46-a979-4c57-bd4a-824b1300215d",
+   "name": "Queue for Callback",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    624,
+    480
+   ]
+  },
+  {
+   "parameters": {
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_queue"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "phone": "={{ $('Normalize Inbound').item.json.phone }}",
+      "reason": "followup_message",
+      "context": "={{ $('Normalize Inbound').item.json.text }}",
+      "status": "open",
+      "created_at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "reason",
+       "displayName": "reason",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "context",
+       "displayName": "context",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "status",
+       "displayName": "status",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "created_at",
+       "displayName": "created_at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "05b814f8-170c-4e00-873c-e29bb079779d",
+   "name": "Append to Queue",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    144,
+    960
+   ]
+  },
+  {
+   "parameters": {
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "event": "inbound_logged",
+      "phone": "={{ $('Normalize Inbound').item.json.phone }}",
+      "detail": "={{ $('Normalize Inbound').item.json.text }}",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "d494d0ed-afa1-4fd4-abe3-d493ceb3d000",
+   "name": "Log Inbound Message",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    400,
+    960
+   ]
+  },
+  {
+   "parameters": {
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_queue"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "phone": "={{ $('Normalize Inbound').item.json.phone }}",
+      "reason": "cold_inbound",
+      "context": "={{ $('Normalize Inbound').item.json.text }}",
+      "status": "open",
+      "created_at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "reason",
+       "displayName": "reason",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "context",
+       "displayName": "context",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "status",
+       "displayName": "status",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "created_at",
+       "displayName": "created_at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "8dd7a761-00e5-4f9d-98bf-875cc63fb945",
+   "name": "Queue Cold Inbound",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -80,
+    1008
+   ]
+  },
+  {
+   "parameters": {
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "event": "cold_inbound",
+      "phone": "={{ $('Normalize Inbound').item.json.phone }}",
+      "detail": "={{ $('Normalize Inbound').item.json.text }}",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "01af99b8-f6a7-4d01-ba27-d260186a53dc",
+   "name": "Log Cold Inbound",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    144,
+    1008
+   ]
+  },
+  {
+   "parameters": {
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_slots"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "taken",
+       "condition": "isFalse"
+      }
+     ]
+    },
+    "limit": 2
+   },
+   "id": "9911daf1-071b-46f1-827b-f728727c3a96",
+   "name": "Get Open Slots",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    400,
+    144
+   ],
+   "alwaysOutputData": true
+  },
+  {
+   "parameters": {
+    "jsCode": "const slots = $input.all().map(i => i.json).filter(r => r.slot_label);\nconst phone = $(\"Normalize Inbound\").first().json.phone;\nif (!slots.length) {\n  return [{ json: { has_slots: false, phone } }];\n}\nconst top = slots.slice(0, 2);\nconst lines = top.map((s, ix) => (ix + 1) + \") \" + s.slot_label).join(\"   \");\nreturn [{ json: {\n  has_slots: true,\n  phone,\n  offered_slots: top.map(s => s.slot_label).join(\"|\"),\n  sms_text: \"Great news - we have consult openings: \" + lines + \". Reply 1 or 2 to grab one, or reply with a day that works better.\",\n  event: \"offer_sent\"\n} }];"
+   },
+   "id": "25444fce-7865-485c-bcca-d8d905e5a72e",
+   "name": "Compose Slot Offer",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    624,
+    144
+   ]
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose",
+      "version": 1
+     },
+     "conditions": [
+      {
+       "leftValue": "={{ $json.has_slots }}",
+       "operator": {
+        "type": "boolean",
+        "operation": "true"
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   },
+   "id": "331dfb80-319d-449d-8b0e-588b1893ffb1",
+   "name": "Slots Available?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.3,
+   "position": [
+    848,
+    144
+   ]
+  },
+  {
+   "parameters": {
+    "operation": "upsert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_conversations"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "phone",
+       "keyValue": "={{ $('Normalize Inbound').item.json.phone }}"
+      }
+     ]
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "phone": "={{ $('Normalize Inbound').item.json.phone }}",
+      "state": "offered",
+      "patient_type": "new",
+      "last_message": "={{ $('Normalize Inbound').item.json.text }}",
+      "offered_slots": "={{ $('Compose Slot Offer').item.json.offered_slots }}",
+      "updated_at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "state",
+       "displayName": "state",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "patient_type",
+       "displayName": "patient_type",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "last_message",
+       "displayName": "last_message",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "offered_slots",
+       "displayName": "offered_slots",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "updated_at",
+       "displayName": "updated_at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "a1225ce9-aadb-40e7-a4e9-b2babc0a3682",
+   "name": "Mark Offered",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    1072,
+    48
+   ]
+  },
+  {
+   "parameters": {
+    "assignments": {
+     "assignments": [
+      {
+       "id": "so-phone",
+       "name": "phone",
+       "value": "={{ $('Compose Slot Offer').item.json.phone }}",
+       "type": "string"
+      },
+      {
+       "id": "so-text",
+       "name": "sms_text",
+       "value": "={{ $('Compose Slot Offer').item.json.sms_text }}",
+       "type": "string"
+      },
+      {
+       "id": "so-event",
+       "name": "event",
+       "value": "offer_sent",
+       "type": "string"
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "c5ccb685-0b90-4eb9-a308-c92d769a756a",
+   "name": "Stage Offer SMS",
+   "type": "n8n-nodes-base.set",
+   "typeVersion": 3.4,
+   "position": [
+    1280,
+    48
+   ]
+  },
+  {
+   "parameters": {
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "event": "queued_for_callback",
+      "phone": "={{ $('Normalize Inbound').item.json.phone }}",
+      "detail": "={{ $('Normalize Inbound').item.json.text }}",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "d879f5e3-d2f7-43b4-8d8f-c4b8a7bceefb",
+   "name": "Log Queued",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    848,
+    480
+   ]
+  },
+  {
+   "parameters": {
+    "operation": "upsert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_conversations"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "phone",
+       "keyValue": "={{ $('Normalize Inbound').item.json.phone }}"
+      }
+     ]
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "phone": "={{ $('Normalize Inbound').item.json.phone }}",
+      "state": "queued",
+      "last_message": "={{ $('Normalize Inbound').item.json.text }}",
+      "updated_at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "state",
+       "displayName": "state",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "last_message",
+       "displayName": "last_message",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "updated_at",
+       "displayName": "updated_at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "5f74565d-9727-4327-a648-89ddeb2a7345",
+   "name": "Mark Queued",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    1072,
+    480
+   ]
+  },
+  {
+   "parameters": {
+    "assignments": {
+     "assignments": [
+      {
+       "id": "qc-phone",
+       "name": "phone",
+       "value": "={{ $('Normalize Inbound').item.json.phone }}",
+       "type": "string"
+      },
+      {
+       "id": "qc-text",
+       "name": "sms_text",
+       "value": "Got it - our team will call you shortly to help with that.",
+       "type": "string"
+      },
+      {
+       "id": "qc-event",
+       "name": "event",
+       "value": "queue_confirm",
+       "type": "string"
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "dcb1951c-12c5-480e-8f9b-670e24c6151e",
+   "name": "Stage Queue Confirm",
+   "type": "n8n-nodes-base.set",
+   "typeVersion": 3.4,
+   "position": [
+    1280,
+    480
+   ]
+  },
+  {
+   "parameters": {
+    "rule": {
+     "interval": [
+      {
+       "triggerAtHour": 7
+      }
+     ]
+    }
+   },
+   "id": "ab36d6be-25b5-4ae9-b071-8527739e7de9",
+   "name": "Owner Digest 7AM",
+   "type": "n8n-nodes-base.scheduleTrigger",
+   "typeVersion": 1.3,
+   "position": [
+    -1184,
+    1504
+   ]
+  },
+  {
+   "parameters": {
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "returnAll": true
+   },
+   "id": "502d4abe-41c2-40da-aec4-7fcda02784f9",
+   "name": "Get Recent Events",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -960,
+    1504
+   ],
+   "alwaysOutputData": true
+  },
+  {
+   "parameters": {
+    "jsCode": "const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();\nconst events = $input.all().map(i => i.json).filter(e => e.event && e.at && e.at >= cutoff);\nconst count = k => events.filter(e => e.event === k).length;\nconst missed = count(\"missed_call\");\nconst textedBack = count(\"sms_sent\") + count(\"sms_simulated\");\nconst booked = count(\"booking_confirmed\");\nconst queued = count(\"queued_for_callback\") + count(\"cold_inbound\") + count(\"inbound_logged\");\nconst optOuts = count(\"opt_out\");\nconst rows = [\n  [\"Missed calls caught\", missed],\n  [\"Text-backs + replies sent\", textedBack],\n  [\"Consults booked by text\", booked],\n  [\"Handed to front desk\", queued],\n  [\"Opt-outs\", optOuts]\n].map(r => \"<tr><td style=\\\"padding:6px 14px 6px 0\\\">\" + r[0] + \"</td><td style=\\\"padding:6px 0;font-weight:bold\\\">\" + r[1] + \"</td></tr>\").join(\"\");\nconst html = \"<div style=\\\"font-family:Arial,sans-serif;font-size:14px;color:#1a2332\\\">\" +\n  \"<h2 style=\\\"margin:0 0 4px\\\">Practice digest - last 24 hours</h2>\" +\n  \"<p style=\\\"margin:0 0 14px;color:#5d6b80\\\">Missed-call recovery mock. Every number below is traceable in ortho_events.</p>\" +\n  \"<table style=\\\"border-collapse:collapse\\\">\" + rows + \"</table>\" +\n  \"<p style=\\\"margin:14px 0 0;color:#5d6b80\\\">\" + (booked > 0 ? \"Every booking here started as a call nobody answered.\" : \"No bookings in this window - queue and templates are ready.\") + \"</p></div>\";\nreturn [{ json: {\n  subject: \"Practice digest - \" + missed + \" missed calls caught, \" + booked + \" consults booked\",\n  html\n} }];"
+   },
+   "id": "78e69784-9173-4756-81bb-0285ac1bbcdf",
+   "name": "Build Digest",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    -736,
+    1504
+   ]
+  },
+  {
+   "parameters": {
+    "sendTo": "owner@example.com",
+    "subject": "={{ $json.subject }}",
+    "message": "={{ $json.html }}",
+    "options": {
+     "appendAttribution": false,
+     "senderName": "Practice Automation OS"
+    },
+    "resource": "message",
+    "operation": "send"
+   },
+   "id": "6f347265-606f-4fcb-87a8-c736c86248b6",
+   "name": "Send Owner Digest",
+   "type": "n8n-nodes-base.gmail",
+   "typeVersion": 2.2,
+   "position": [
+    -528,
+    1504
+   ]
+  },
+  {
+   "parameters": {
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "event": "digest_sent",
+      "phone": "",
+      "detail": "={{ $('Build Digest').item.json.subject }}",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "4c43b025-ff18-43c7-95d6-30cf4869982f",
+   "name": "Log Digest Sent",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -304,
+    1504
+   ]
+  },
+  {
+   "parameters": {
+    "content": "# Ortho \u2014 Missed-Call Recovery (product mock)\n\nDe-branded vertical product template. **Swap map for a real client:**\n- Missed Call Webhook \u2190 RingCentral missed-call event subscription\n- Inbound SMS Webhook \u2190 RingCentral / practice SMS inbound hook\n- ortho_slots + booking \u2190 PMS API (e.g. Greyfinch GraphQL: open-slot query + appointment mutation)\n- Twilio sender \u2190 the practice's own number\n\nSynthetic data only. No PHI in this mock. State machine lives in ortho_conversations: texted \u2192 offered \u2192 booked / queued / opted_out.",
+    "height": 200,
+    "width": 520,
+    "color": 4
+   },
+   "id": "5e235535-fd81-4525-91d7-f6e995b03f0e",
+   "name": "Sticky Note 8dac25b8",
+   "type": "n8n-nodes-base.stickyNote",
+   "typeVersion": 1,
+   "position": [
+    -1184,
+    -528
+   ]
+  },
+  {
+   "parameters": {
+    "content": "## Send gate\nEvery outbound SMS passes this IF. Ships in **simulate** mode: messages log to ortho_events as sms_simulated, nothing actually sends.\n\nTo go live: change the left value in \"Send Mode: live?\" from `simulate` to `live`, and set the Twilio From number.\n\nTemplates only \u2014 anything the templates can't answer routes to the human queue by design.",
+    "height": 400,
+    "width": 540,
+    "color": 3
+   },
+   "id": "f3005353-16ef-449b-9459-3362d222ee79",
+   "name": "Sticky Note 636ade94",
+   "type": "n8n-nodes-base.stickyNote",
+   "typeVersion": 1,
+   "position": [
+    -48,
+    -656
+   ]
+  },
+  {
+   "parameters": {
+    "content": "## Reply triage\nAny OpenAI-compatible model (local via LM Studio, or a BAA-covered cloud model in production). If the model is down or unsure, the error/other outputs route to Queue for Callback \u2014 a human always catches what AI drops. STOP/quit is handled rule-based BEFORE any AI sees the text.",
+    "height": 200,
+    "width": 300,
+    "color": 5
+   },
+   "id": "17c7f1b3-8182-449f-b669-2a74df4ed8d8",
+   "name": "Sticky Note a3ae2e53",
+   "type": "n8n-nodes-base.stickyNote",
+   "typeVersion": 1,
+   "position": [
+    -416,
+    176
+   ]
+  },
+  {
+   "parameters": {
+    "content": "## Owner digest\nDaily 7:00 summary of the last 24h from ortho_events, emailed via Gmail. In a client build this becomes the owner's Monday brief (P4 pattern).",
+    "height": 200,
+    "width": 740,
+    "color": 6
+   },
+   "id": "c97b48ee-9c26-4917-9909-15fd5853f192",
+   "name": "Sticky Note d8d21887",
+   "type": "n8n-nodes-base.stickyNote",
+   "typeVersion": 1,
+   "position": [
+    -1904,
+    368
+   ]
+  },
+  {
+   "parameters": {
+    "jsCode": "const j = $input.first().json;\nconst b = j.body || j || {};\nreturn [{ json: {\n  phone: b.caller || b.From || b.from || '',\n  call_id: b.call_id || b.CallSid || 'unknown'\n} }];"
+   },
+   "id": "cffbd70e-403b-42ce-b5ee-3c4f4d02e6ba",
+   "name": "Normalize Missed Call",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    -960,
+    -240
+   ]
+  },
+  {
+   "parameters": {
+    "jsCode": "const j = $input.first().json;\nconst b = j.body || j || {};\nreturn [{ json: {\n  phone: b.From || b.from || b.phone || '',\n  text: b.Body || b.body || b.text || '',\n  media_url: b.MediaUrl0 || b.media_url || '',\n  num_media: parseInt(b.NumMedia || 0, 10) || 0\n} }];"
+   },
+   "id": "23d84ff6-67b1-4654-87a6-2af76f6c5a1b",
+   "name": "Normalize Inbound",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    -960,
+    704
+   ]
+  },
+  {
+   "parameters": {
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_admins"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "phone",
+       "keyValue": "={{ $('Normalize Inbound').item.json.phone }}"
+      }
+     ]
+    },
+    "limit": 1
+   },
+   "id": "851c4908-8c56-4a04-aa41-8c164799c26c",
+   "name": "Admin Check",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -720,
+    896
+   ],
+   "alwaysOutputData": true
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose",
+      "version": 1
+     },
+     "conditions": [
+      {
+       "id": "adm-1",
+       "leftValue": "={{ $json.phone ?? '' }}",
+       "rightValue": "",
+       "operator": {
+        "type": "string",
+        "operation": "notEmpty",
+        "singleValue": true
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   },
+   "id": "e7b27762-af7b-481d-8c42-0fc161aa44dd",
+   "name": "Is Admin?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.3,
+   "position": [
+    -528,
+    1168
+   ]
+  },
+  {
+   "parameters": {
+    "jsCode": "const t = ($('Normalize Inbound').first().json.text || '').trim();\nconst m = t.match(/^(?:text|send|msg)\\s+(\\+?[\\d\\-\\s().]{8,})\\s*[:\\-]\\s*(.+)$/i);\nif (m) {\n  const to = '+' + m[1].replace(/[^\\d]/g, '');\n  return [{ json: { mode: 'relay', to, message: m[2].trim() } }];\n}\nreturn [{ json: { mode: 'ask', question: t } }];"
+   },
+   "id": "2b31eba7-bb33-4ad2-9171-e954509ed035",
+   "name": "Admin Command Parse",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    -304,
+    1168
+   ]
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "strict",
+      "version": 1
+     },
+     "conditions": [
+      {
+       "id": "rel-1",
+       "leftValue": "={{ $json.mode }}",
+       "rightValue": "relay",
+       "operator": {
+        "type": "string",
+        "operation": "equals"
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   },
+   "id": "8c615708-0420-497c-af8a-c15bd12d4d89",
+   "name": "Admin Relay?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.3,
+   "position": [
+    -160,
+    1168
+   ]
+  },
+  {
+   "parameters": {
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "matchingColumns": [],
+     "value": {
+      "event": "admin_relay",
+      "phone": "={{ $('Admin Command Parse').item.json.to }}",
+      "detail": "={{ 'from admin: ' + $('Admin Command Parse').item.json.message }}",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "a54fe15e-4a74-4f5c-992f-f92050bb602c",
+   "name": "Log Admin Relay",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    144,
+    1088
+   ]
+  },
+  {
+   "parameters": {
+    "assignments": {
+     "assignments": [
+      {
+       "id": "ar-1",
+       "name": "phone",
+       "value": "={{ $('Admin Command Parse').item.json.to }}",
+       "type": "string"
+      },
+      {
+       "id": "ar-2",
+       "name": "sms_text",
+       "value": "={{ $('Admin Command Parse').item.json.message }}",
+       "type": "string"
+      },
+      {
+       "id": "ar-3",
+       "name": "event",
+       "value": "admin_relay",
+       "type": "string"
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "0ba9560b-831a-4efc-afc8-93bddf15632c",
+   "name": "Stage Relay SMS",
+   "type": "n8n-nodes-base.set",
+   "typeVersion": 3.4,
+   "position": [
+    368,
+    1088
+   ]
+  },
+  {
+   "parameters": {
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_conversations"
+    },
+    "returnAll": true
+   },
+   "id": "99ef0060-5a73-43ab-8a56-f4187cedca49",
+   "name": "Ctx Conversations",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    144,
+    1280
+   ],
+   "alwaysOutputData": true,
+   "executeOnce": true
+  },
+  {
+   "parameters": {
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_queue"
+    },
+    "returnAll": true
+   },
+   "id": "704d1ff9-0fe1-4f07-a17b-4a9f7f669a0a",
+   "name": "Ctx Queue",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    320,
+    1280
+   ],
+   "alwaysOutputData": true,
+   "executeOnce": true
+  },
+  {
+   "parameters": {
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "limit": 30,
+    "orderBy": true
+   },
+   "id": "b551d16c-7bab-4801-b9c5-1b44ca6669b3",
+   "name": "Ctx Events",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    512,
+    1280
+   ],
+   "alwaysOutputData": true,
+   "executeOnce": true
+  },
+  {
+   "parameters": {
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_slots"
+    },
+    "returnAll": true
+   },
+   "id": "b969b650-cc2c-4d2d-956c-6aa355c4b77f",
+   "name": "Ctx Slots",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    688,
+    1280
+   ],
+   "alwaysOutputData": true,
+   "executeOnce": true
+  },
+  {
+   "parameters": {
+    "jsCode": "const q = $('Admin Command Parse').first().json.question || '';\nconst rows = (name) => { try { return $(name).all().map(i => i.json); } catch (e) { return []; } };\nconst facts = rows('Ctx Practice Facts').filter(r => r.key).map(r => (r.category ? ('[' + r.category + '] ') : '') + r.key + ': ' + r.value).join('\\n') || 'none';\nconst convs = rows('Ctx Conversations').filter(r => r.phone).slice(0, 15).map(r => r.phone + ' state=' + r.state + ' type=' + (r.patient_type || '-') + ' last=\"' + ((r.last_message || '').slice(0, 60)) + '\" upd=' + (r.updated_at || '')).join('\\n') || 'none';\nconst queue = rows('Ctx Queue').filter(r => r.phone && r.status === 'open').slice(0, 15).map(r => r.phone + ' [' + r.reason + '] \"' + ((r.context || '').slice(0, 70)) + '\" ' + (r.created_at || '')).join('\\n') || 'empty';\nconst events = rows('Ctx Events').filter(r => r.event).slice(0, 30).map(r => (r.at || '') + ' ' + r.event + ' ' + (r.phone || '') + ' ' + ((r.detail || '').slice(0, 60))).join('\\n') || 'none';\nconst slots = rows('Ctx Slots').filter(r => r.slot_label).map(r => r.slot_label + ' ' + (r.taken ? ('TAKEN by ' + (r.booked_by || '?')) : 'open')).join('\\n') || 'none';\nconst prompt = 'You are the admin assistant for this practice, replying to the practice owner by SMS. Answer using ONLY the data below. Be specific and brief (under 450 characters), plain text, no markdown. If the data cannot answer, say so and name what is missing. Never invent patients, numbers, fees, or events.\\n\\nOWNER QUESTION: ' + q + '\\n\\nPRACTICE FACTS (identity, hours, insurance, fees, policies):\\n' + facts + '\\n\\nOPEN CALLBACK QUEUE:\\n' + queue + '\\n\\nCONVERSATIONS:\\n' + convs + '\\n\\nRECENT EVENTS (newest first):\\n' + events + '\\n\\nCONSULT SLOTS:\\n' + slots;\nreturn [{ json: { question: q, prompt } }];"
+   },
+   "id": "c5c462c6-af96-41ed-92bd-ac15fe2461a9",
+   "name": "Assemble Admin Context",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    864,
+    1280
+   ]
+  },
+  {
+   "parameters": {
+    "model": {
+     "__rl": true,
+     "mode": "id",
+     "value": "qwen3.6-35b-a3b-mlx"
+    },
+    "responsesApiEnabled": false,
+    "options": {
+     "temperature": 0.2,
+     "timeout": 45000,
+     "maxRetries": 1
+    }
+   },
+   "id": "1df07a09-2348-4b0e-b7dd-c7f40bfe863e",
+   "name": "Admin Model",
+   "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+   "typeVersion": 1.3,
+   "position": [
+    1024,
+    1440
+   ]
+  },
+  {
+   "parameters": {
+    "sessionIdType": "customKey",
+    "sessionKey": "={{ 'admin-' + $('Normalize Inbound').item.json.phone }}",
+    "contextWindowLength": 8
+   },
+   "id": "6afd4dd5-6225-4546-9ed0-abdc59ee3f38",
+   "name": "Admin Memory",
+   "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+   "typeVersion": 1.4,
+   "position": [
+    1200,
+    1440
+   ]
+  },
+  {
+   "parameters": {
+    "promptType": "define",
+    "text": "={{ $json.prompt }}",
+    "options": {
+     "systemMessage": "You are a concise practice admin assistant. Reply in plain SMS text.",
+     "maxIterations": 5,
+     "enableStreaming": false
+    }
+   },
+   "id": "e24cab89-05ce-43e7-b1a1-1c406bd00f20",
+   "name": "Admin Brain",
+   "type": "@n8n/n8n-nodes-langchain.agent",
+   "typeVersion": 3.1,
+   "position": [
+    1088,
+    1280
+   ]
+  },
+  {
+   "parameters": {
+    "assignments": {
+     "assignments": [
+      {
+       "id": "aa-1",
+       "name": "phone",
+       "value": "={{ $('Normalize Inbound').item.json.phone }}",
+       "type": "string"
+      },
+      {
+       "id": "aa-2",
+       "name": "sms_text",
+       "value": "={{ $json.output }}",
+       "type": "string"
+      },
+      {
+       "id": "aa-3",
+       "name": "event",
+       "value": "admin_answer",
+       "type": "string"
+      }
+     ]
+    },
+    "options": {}
+   },
+   "id": "7104578f-12cb-4554-b141-a6b3ec99835a",
+   "name": "Stage Admin Reply",
+   "type": "n8n-nodes-base.set",
+   "typeVersion": 3.4,
+   "position": [
+    1328,
+    1280
+   ]
+  },
+  {
+   "parameters": {
+    "content": "## Admin section \u2014 the doctor's SMS command line\nSender phone is checked against ortho_admins. Admins get two powers:\n1) **Relay**: `text +1813...: message` sends to that patient (through the send gate).\n2) **Ask anything**: full practice state (queue, conversations, events, slots) is assembled and answered by the model, SMS-length, with per-admin memory.\n\n**Replace the seeded +15555550100 in ortho_admins with the real owner's cell.** Production hardening for clients: role-based admin powers + PIN word. Everything an admin does is logged to ortho_events.",
+    "height": 240,
+    "width": 460,
+    "color": 2
+   },
+   "id": "f63e9682-6482-4e95-b7bc-c92bb27df224",
+   "name": "Sticky Admin",
+   "type": "n8n-nodes-base.stickyNote",
+   "typeVersion": 1,
+   "position": [
+    -1488,
+    1136
+   ]
+  },
+  {
+   "id": "4da776e5-ab27-48c9-b96b-ac0c6f567adc",
+   "name": "Ctx Practice Facts",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    860,
+    1440
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_practice_facts"
+    },
+    "returnAll": true
+   },
+   "alwaysOutputData": true,
+   "executeOnce": true
+  },
+  {
+   "id": "84685f9b-1c76-4d0c-bda5-8c42d4a2e553",
+   "name": "Booking Succeeded?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.3,
+   "position": [
+    736,
+    624
+   ],
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose"
+     },
+     "conditions": [
+      {
+       "id": "bs-1",
+       "leftValue": "={{ $json.slot_label ?? '' }}",
+       "rightValue": "",
+       "operator": {
+        "type": "string",
+        "operation": "notEmpty",
+        "singleValue": true
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "e75fb6ce-e7a8-42ac-95bf-eea5752a01cb",
+   "name": "Log Admin Question",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -32,
+    1328
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "insert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "matchingColumns": [],
+     "value": {
+      "event": "admin_question",
+      "phone": "={{ $('Normalize Inbound').item.json.phone }}",
+      "detail": "={{ $('Admin Command Parse').item.json.question }}",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "d18dcb15-7967-4e36-aa22-78647713716d",
+   "name": "Has Media?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.3,
+   "position": [
+    -848,
+    592
+   ],
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose"
+     },
+     "conditions": [
+      {
+       "id": "hm-1",
+       "leftValue": "={{ $('Normalize Inbound').item.json.media_url ?? '' }}",
+       "rightValue": "",
+       "operator": {
+        "type": "string",
+        "operation": "notEmpty",
+        "singleValue": true
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "67c5e55a-63a2-4b5a-891c-6040319a9f01",
+   "name": "Queue Photo Review",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -624,
+    400
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "insert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_queue"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "matchingColumns": [],
+     "value": {
+      "phone": "={{ $('Normalize Inbound').item.json.phone }}",
+      "reason": "photo_review",
+      "context": "={{ $('Normalize Inbound').item.json.text + ' [media: ' + $('Normalize Inbound').item.json.media_url + ']' }}",
+      "status": "open",
+      "created_at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "reason",
+       "displayName": "reason",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "context",
+       "displayName": "context",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "status",
+       "displayName": "status",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "created_at",
+       "displayName": "created_at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "300238a5-217e-420b-bd6a-962ac5bbf1bf",
+   "name": "Log Photo Received",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -416,
+    400
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "insert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "matchingColumns": [],
+     "value": {
+      "event": "photo_received",
+      "phone": "={{ $('Normalize Inbound').item.json.phone }}",
+      "detail": "={{ $('Normalize Inbound').item.json.media_url }}",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "be14e630-8901-492d-9bd8-cae206f05a91",
+   "name": "Stage Photo Ack",
+   "type": "n8n-nodes-base.set",
+   "typeVersion": 3.4,
+   "position": [
+    -208,
+    400
+   ],
+   "parameters": {
+    "mode": "manual",
+    "includeOtherFields": false,
+    "assignments": {
+     "assignments": [
+      {
+       "id": "pa-1",
+       "name": "phone",
+       "value": "={{ $('Normalize Inbound').item.json.phone }}",
+       "type": "string"
+      },
+      {
+       "id": "pa-2",
+       "name": "sms_text",
+       "value": "Got the photo - the doctor will take a look and our team will text you back shortly.",
+       "type": "string"
+      },
+      {
+       "id": "pa-3",
+       "name": "event",
+       "value": "photo_ack",
+       "type": "string"
+      }
+     ]
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "2d5defc9-efec-423c-ad9e-1f0140dd2eb8",
+   "name": "FAQ Facts",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    368,
+    320
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_practice_facts"
+    },
+    "returnAll": true
+   },
+   "alwaysOutputData": true,
+   "executeOnce": true
+  },
+  {
+   "id": "7e1ba440-460e-4db4-8f6c-62933beee0b8",
+   "name": "FAQ Match",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    576,
+    320
+   ],
+   "parameters": {
+    "mode": "runOnceForAllItems",
+    "language": "javaScript",
+    "jsCode": "const q = ($('Normalize Inbound').first().json.text || '').toLowerCase();\nconst phone = $('Normalize Inbound').first().json.phone;\nconst facts = {};\nfor (const r of $('FAQ Facts').all().map(i => i.json)) { if (r.key) facts[r.key] = r.value; }\nconst rules = [\n  { re: /insur|delta|metlife|cigna|aetna|humana|concordia|coverage|network/, a: () => 'We accept ' + (facts.accepted_plans || 'most major PPO plans') + '. ' + (facts.out_of_network || '') },\n  { re: /invisalign|aligner/, a: () => 'Invisalign at our office runs ' + (facts.invisalign_range || '') + '. ' + (facts.financing || '') },\n  { re: /price|cost|how much|fee|afford|financ|payment plan/, a: () => 'Braces run ' + (facts.braces_range || '') + ' and Invisalign ' + (facts.invisalign_range || '') + '. ' + (facts.financing || '') },\n  { re: /hour|open|close|what time/, a: () => 'We are open Mon-Thu ' + (facts.monday_thursday || '') + ' and Fri ' + (facts.friday || '') + '. ' + (facts.weekend || '') },\n  { re: /where|address|located|location|parking/, a: () => 'We are at ' + (facts.address || '') + '. ' + (facts.parking || '') },\n  { re: /consult|first visit|x.?ray|exam/, a: () => 'New-patient consults are ' + (facts.new_patient_consult || 'free') + ' and take about ' + (facts.consult_length || '40 minutes') + '.' }\n];\nfor (const r of rules) {\n  if (r.re.test(q)) {\n    const ans = (r.a() + ' Want to set up a consult? Just reply and we will grab you a time.').replace(/\\s+/g, ' ').trim();\n    return [{ json: { matched: true, phone, sms_text: ans, event: 'faq_answer' } }];\n  }\n}\nreturn [{ json: { matched: false, phone } }];"
+   }
+  },
+  {
+   "id": "9c1ba471-15fe-4000-912b-656351e0f87a",
+   "name": "FAQ Matched?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.3,
+   "position": [
+    784,
+    320
+   ],
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose"
+     },
+     "conditions": [
+      {
+       "id": "fm-1",
+       "leftValue": "={{ $json.matched }}",
+       "rightValue": "",
+       "operator": {
+        "type": "boolean",
+        "operation": "true",
+        "singleValue": true
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "22fe1e10-ec17-4269-911e-161c0dfe2113",
+   "name": "Log FAQ Answer",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    992,
+    256
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "insert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "matchingColumns": [],
+     "value": {
+      "event": "faq_answer",
+      "phone": "={{ $json.phone }}",
+      "detail": "={{ $json.sms_text }}",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "a0358a91-c190-443b-bfb5-a773ce9ed104",
+   "name": "Stage FAQ Answer",
+   "type": "n8n-nodes-base.set",
+   "typeVersion": 3.4,
+   "position": [
+    1200,
+    256
+   ],
+   "parameters": {
+    "mode": "manual",
+    "includeOtherFields": false,
+    "assignments": {
+     "assignments": [
+      {
+       "id": "fa-1",
+       "name": "phone",
+       "value": "={{ $('FAQ Match').item.json.phone }}",
+       "type": "string"
+      },
+      {
+       "id": "fa-2",
+       "name": "sms_text",
+       "value": "={{ $('FAQ Match').item.json.sms_text }}",
+       "type": "string"
+      },
+      {
+       "id": "fa-3",
+       "name": "event",
+       "value": "faq_answer",
+       "type": "string"
+      }
+     ]
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "06f72fc9-0bf0-4b1c-bb3f-642207a25563",
+   "name": "Parse Resched Intent",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    368,
+    1740
+   ],
+   "parameters": {
+    "mode": "runOnceForAllItems",
+    "language": "javaScript",
+    "jsCode": "const t = ($('Normalize Inbound').first().json.text || '').toLowerCase();\nconst cancel = /\\b(cancel|can.?t make|cannot make|not coming|call it off)\\b/.test(t);\nreturn [{ json: { cancel, phone: $('Normalize Inbound').first().json.phone } }];"
+   }
+  },
+  {
+   "id": "b904faf5-215e-458c-83c3-42ab18c40926",
+   "name": "Find My Booking",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    576,
+    1740
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_slots"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "booked_by",
+       "condition": "eq",
+       "keyValue": "={{ $('Normalize Inbound').item.json.phone }}"
+      },
+      {
+       "keyName": "taken",
+       "condition": "isTrue"
+      }
+     ]
+    },
+    "returnAll": false,
+    "limit": 1
+   },
+   "alwaysOutputData": true
+  },
+  {
+   "id": "1d2826cd-3bd2-4afa-a325-e33f5dd6334a",
+   "name": "Has Booking?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.3,
+   "position": [
+    784,
+    1740
+   ],
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose"
+     },
+     "conditions": [
+      {
+       "id": "hb-1",
+       "leftValue": "={{ $json.slot_label ?? '' }}",
+       "rightValue": "",
+       "operator": {
+        "type": "string",
+        "operation": "notEmpty",
+        "singleValue": true
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "9c48bbd5-3c7e-46a5-b120-8649e52e4e85",
+   "name": "Free Slot",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    992,
+    1680
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "update",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_slots"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "slot_label",
+       "condition": "eq",
+       "keyValue": "={{ $('Find My Booking').item.json.slot_label }}"
+      }
+     ]
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "matchingColumns": [],
+     "value": {
+      "taken": false,
+      "booked_by": "",
+      "booked_at": ""
+     },
+     "schema": [
+      {
+       "id": "taken",
+       "displayName": "taken",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "boolean",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "booked_by",
+       "displayName": "booked_by",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "booked_at",
+       "displayName": "booked_at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "a82dab88-b5f1-4750-9cb7-ba92de4b0f05",
+   "name": "Log Cancelled",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    1200,
+    1680
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "insert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "matchingColumns": [],
+     "value": {
+      "event": "booking_cancelled",
+      "phone": "={{ $('Normalize Inbound').item.json.phone }}",
+      "detail": "={{ $('Find My Booking').item.json.slot_label + ($('Parse Resched Intent').item.json.cancel ? ' (cancelled)' : ' (rescheduling)') }}",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "21eae78d-9df4-43a2-b843-34edf4d98235",
+   "name": "Cancel or Resched?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.3,
+   "position": [
+    1408,
+    1680
+   ],
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose"
+     },
+     "conditions": [
+      {
+       "id": "cr-1",
+       "leftValue": "={{ $('Parse Resched Intent').item.json.cancel }}",
+       "rightValue": "",
+       "operator": {
+        "type": "boolean",
+        "operation": "true",
+        "singleValue": true
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "0643c61b-4e13-45b4-ab3e-3e781632a3c4",
+   "name": "Mark Conv Texted",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    1616,
+    1620
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "upsert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_conversations"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "phone",
+       "condition": "eq",
+       "keyValue": "={{ $('Normalize Inbound').item.json.phone }}"
+      }
+     ]
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "matchingColumns": [],
+     "value": {
+      "phone": "={{ $('Normalize Inbound').item.json.phone }}",
+      "state": "texted",
+      "last_message": "={{ $('Normalize Inbound').item.json.text }}",
+      "offered_slots": "",
+      "updated_at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "state",
+       "displayName": "state",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "last_message",
+       "displayName": "last_message",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "offered_slots",
+       "displayName": "offered_slots",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "updated_at",
+       "displayName": "updated_at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "1613429c-e119-439a-8288-502e2d957e94",
+   "name": "Stage Cancel Confirm",
+   "type": "n8n-nodes-base.set",
+   "typeVersion": 3.4,
+   "position": [
+    1824,
+    1620
+   ],
+   "parameters": {
+    "mode": "manual",
+    "includeOtherFields": false,
+    "assignments": {
+     "assignments": [
+      {
+       "id": "cc-1",
+       "name": "phone",
+       "value": "={{ $('Normalize Inbound').item.json.phone }}",
+       "type": "string"
+      },
+      {
+       "id": "cc-2",
+       "name": "sms_text",
+       "value": "={{ 'No problem - your ' + $('Find My Booking').item.json.slot_label + ' consult is cancelled. Text us anytime to rebook.' }}",
+       "type": "string"
+      },
+      {
+       "id": "cc-3",
+       "name": "event",
+       "value": "cancel_confirm",
+       "type": "string"
+      }
+     ]
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "831df19d-006d-4997-ad1f-83b8af462524",
+   "name": "Hourly Sweeps",
+   "type": "n8n-nodes-base.scheduleTrigger",
+   "typeVersion": 1.3,
+   "position": [
+    -1184,
+    1900
+   ],
+   "parameters": {
+    "rule": {
+     "interval": [
+      {
+       "field": "hours",
+       "hoursInterval": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "d219e478-25f0-4cc1-9202-6464e7f40032",
+   "name": "Get Booked Slots",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -960,
+    1840
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_slots"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "taken",
+       "condition": "isTrue"
+      }
+     ]
+    },
+    "returnAll": true
+   },
+   "alwaysOutputData": true,
+   "executeOnce": true
+  },
+  {
+   "id": "40c73fd6-b7c0-4a58-ac9a-dd8d5e8fe37a",
+   "name": "Get Reminder Events",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -752,
+    1840
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "event",
+       "condition": "eq",
+       "keyValue": "reminder_sent"
+      }
+     ]
+    },
+    "returnAll": true
+   },
+   "alwaysOutputData": true,
+   "executeOnce": true
+  },
+  {
+   "id": "cecfbae3-3732-483f-bb94-8e2004da203b",
+   "name": "Sweep Reminders",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    -544,
+    1840
+   ],
+   "parameters": {
+    "mode": "runOnceForAllItems",
+    "language": "javaScript",
+    "jsCode": "const slots = $('Get Booked Slots').all().map(i => i.json).filter(r => r.taken && r.booked_by && r.slot_label);\nconst sent = new Set($('Get Reminder Events').all().map(i => i.json.detail).filter(Boolean));\nconst dayIdx = { mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, sun: 7 };\nconst out = [];\nfor (const s of slots) {\n  const m = (s.slot_label || '').match(/^(\\w{3})\\s+(\\d{1,2}):(\\d{2})\\s*(AM|PM)$/i);\n  if (!m) continue;\n  const wd = dayIdx[m[1].toLowerCase()];\n  if (!wd) continue;\n  let h = (+m[2]) % 12;\n  if (m[4].toUpperCase() === 'PM') h += 12;\n  const min = +m[3];\n  const dd = (wd - $now.weekday + 7) % 7;\n  const t = $now.startOf('day').plus({ days: dd }).set({ hour: h, minute: min });\n  const hrs = t.diff($now, 'hours').hours;\n  if (hrs < 0) continue;\n  const mk = (tag, msg) => {\n    const key = s.slot_label + ':' + tag;\n    if (!sent.has(key)) out.push({ json: { phone: s.booked_by, sms_text: msg, event: 'reminder_sent', detail: key } });\n  };\n  if (hrs >= 20 && hrs <= 28) mk('24h', 'Reminder from Harborline Orthodontics: your consult is tomorrow at ' + s.slot_label + '. Reply here if anything changes.');\n  if (hrs >= 1 && hrs <= 3) mk('2h', 'See you soon! Your consult at Harborline Orthodontics is today at ' + s.slot_label + '. Free parking behind the building.');\n}\nreturn out;"
+   }
+  },
+  {
+   "id": "9c25adb8-aac4-4dc7-91a2-92e4ce9d6f24",
+   "name": "Log Reminder",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -336,
+    1840
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "insert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "matchingColumns": [],
+     "value": {
+      "event": "reminder_sent",
+      "phone": "={{ $json.phone }}",
+      "detail": "={{ $json.detail }}",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "e97a6e3c-d53e-49be-bf3e-a99f58fa20ac",
+   "name": "Stage Reminder",
+   "type": "n8n-nodes-base.set",
+   "typeVersion": 3.4,
+   "position": [
+    -128,
+    1840
+   ],
+   "parameters": {
+    "mode": "manual",
+    "includeOtherFields": false,
+    "assignments": {
+     "assignments": [
+      {
+       "id": "rm-1",
+       "name": "phone",
+       "value": "={{ $('Sweep Reminders').item.json.phone }}",
+       "type": "string"
+      },
+      {
+       "id": "rm-2",
+       "name": "sms_text",
+       "value": "={{ $('Sweep Reminders').item.json.sms_text }}",
+       "type": "string"
+      },
+      {
+       "id": "rm-3",
+       "name": "event",
+       "value": "reminder_sent",
+       "type": "string"
+      }
+     ]
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "13a4794c-8b9f-41ee-8659-716ed4a821b9",
+   "name": "Get Offered Convs",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -960,
+    2060
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_conversations"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "state",
+       "condition": "eq",
+       "keyValue": "offered"
+      }
+     ]
+    },
+    "returnAll": true
+   },
+   "alwaysOutputData": true,
+   "executeOnce": true
+  },
+  {
+   "id": "163ca5e3-f0c6-4f1e-9f49-6ff863732b87",
+   "name": "Get Nudge Events",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -752,
+    2060
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "event",
+       "condition": "eq",
+       "keyValue": "nudge_sent"
+      }
+     ]
+    },
+    "returnAll": true
+   },
+   "alwaysOutputData": true,
+   "executeOnce": true
+  },
+  {
+   "id": "436039c6-22df-4393-ba52-4d6de410597e",
+   "name": "Sweep Nudges",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    -544,
+    2060
+   ],
+   "parameters": {
+    "mode": "runOnceForAllItems",
+    "language": "javaScript",
+    "jsCode": "const convs = $('Get Offered Convs').all().map(i => i.json).filter(r => r.phone && r.state === 'offered');\nconst nudged = new Set($('Get Nudge Events').all().map(i => i.json.phone).filter(Boolean));\nconst out = [];\nfor (const c of convs) {\n  const upd = c.updated_at ? new Date(c.updated_at) : null;\n  if (!upd || isNaN(upd.getTime())) continue;\n  const ageH = ($now.toMillis() - upd.getTime()) / 3.6e6;\n  if (ageH >= 24 && nudged.has(c.phone)) {\n    out.push({ json: { action: 'expire', phone: c.phone, last: c.last_message || '' } });\n  } else if (ageH >= 4 && !nudged.has(c.phone)) {\n    out.push({ json: { action: 'nudge', phone: c.phone, sms_text: 'Still want to grab one of those consult times at Harborline Orthodontics? Reply 1 or 2 and it is yours - or reply with a day that works better.', event: 'nudge_sent' } });\n  }\n}\nreturn out;"
+   }
+  },
+  {
+   "id": "3259ad3d-0692-409b-829e-6a4a14af069e",
+   "name": "Nudge Action?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.3,
+   "position": [
+    -336,
+    2060
+   ],
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "strict"
+     },
+     "conditions": [
+      {
+       "id": "na-1",
+       "leftValue": "={{ $json.action }}",
+       "rightValue": "nudge",
+       "operator": {
+        "type": "string",
+        "operation": "equals"
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "661afc5b-aa82-44a7-98e2-a8628da21775",
+   "name": "Log Nudge",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -128,
+    2000
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "insert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "matchingColumns": [],
+     "value": {
+      "event": "nudge_sent",
+      "phone": "={{ $json.phone }}",
+      "detail": "offer follow-up after 4h silence",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "b4a47f83-3ac8-4611-a0d1-6114adcffaea",
+   "name": "Stage Nudge",
+   "type": "n8n-nodes-base.set",
+   "typeVersion": 3.4,
+   "position": [
+    80,
+    2000
+   ],
+   "parameters": {
+    "mode": "manual",
+    "includeOtherFields": false,
+    "assignments": {
+     "assignments": [
+      {
+       "id": "sn-1",
+       "name": "phone",
+       "value": "={{ $('Sweep Nudges').item.json.phone }}",
+       "type": "string"
+      },
+      {
+       "id": "sn-2",
+       "name": "sms_text",
+       "value": "={{ $('Sweep Nudges').item.json.sms_text }}",
+       "type": "string"
+      },
+      {
+       "id": "sn-3",
+       "name": "event",
+       "value": "nudge_sent",
+       "type": "string"
+      }
+     ]
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "7adf13c5-9e14-4b53-9673-5a428594d1ad",
+   "name": "Expire To Queue",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -128,
+    2140
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "insert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_queue"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "matchingColumns": [],
+     "value": {
+      "phone": "={{ $json.phone }}",
+      "reason": "no_reply_expired",
+      "context": "={{ 'offered slots, silent 24h+. last msg: ' + ($json.last || '') }}",
+      "status": "open",
+      "created_at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "reason",
+       "displayName": "reason",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "context",
+       "displayName": "context",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "status",
+       "displayName": "status",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "created_at",
+       "displayName": "created_at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "8368d5cc-11af-4d1c-b82b-24da869a747f",
+   "name": "Expire Mark Queued",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    80,
+    2140
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "upsert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_conversations"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "phone",
+       "condition": "eq",
+       "keyValue": "={{ $('Sweep Nudges').item.json.phone }}"
+      }
+     ]
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "matchingColumns": [],
+     "value": {
+      "phone": "={{ $('Sweep Nudges').item.json.phone }}",
+      "state": "queued",
+      "updated_at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "state",
+       "displayName": "state",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "updated_at",
+       "displayName": "updated_at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "c72744d7-a53d-4725-ad65-cf83b3d165bd",
+   "name": "Log Expired",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    288,
+    2140
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "insert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "matchingColumns": [],
+     "value": {
+      "event": "no_reply_expired",
+      "phone": "={{ $('Sweep Nudges').item.json.phone }}",
+      "detail": "offer expired after 24h silence - handed to front desk",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "a252fdb7-9322-4401-8815-ee244f1252e6",
+   "name": "Track Forms Pending",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    1176,
+    624
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "insert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_forms"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "matchingColumns": [],
+     "value": {
+      "phone": "={{ $('Parse Slot Choice').item.json.phone }}",
+      "status": "pending",
+      "form_link": "https://forms.harborlineortho.example/new-patient",
+      "sent_at": "={{ $now.toISO() }}",
+      "completed_at": ""
+     },
+     "schema": [
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "status",
+       "displayName": "status",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "form_link",
+       "displayName": "form_link",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "sent_at",
+       "displayName": "sent_at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "completed_at",
+       "displayName": "completed_at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "32bee995-9bad-445c-ac96-c21e2b3cc0b0",
+   "name": "Form Complete Webhook",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2.1,
+   "position": [
+    -1184,
+    2320
+   ],
+   "parameters": {
+    "httpMethod": "POST",
+    "path": "ortho-form-complete",
+    "options": {}
+   }
+  },
+  {
+   "id": "203cfcd5-f8eb-4d03-957b-b31c486e9845",
+   "name": "Normalize Form Complete",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    -960,
+    2320
+   ],
+   "parameters": {
+    "mode": "runOnceForAllItems",
+    "language": "javaScript",
+    "jsCode": "const j = $input.first().json;\nconst b = j.body || j || {};\nreturn [{ json: {\n  phone: b.phone || b.From || '',\n  ref: b.submission_id || b.ref || 'form'\n} }];"
+   }
+  },
+  {
+   "id": "7b6bbbcf-6aa3-46c2-ac67-04d5f8c05bbc",
+   "name": "Mark Form Complete",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -736,
+    2320
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "update",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_forms"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "phone",
+       "condition": "eq",
+       "keyValue": "={{ $('Normalize Form Complete').item.json.phone }}"
+      },
+      {
+       "keyName": "status",
+       "condition": "eq",
+       "keyValue": "pending"
+      }
+     ]
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "matchingColumns": [],
+     "value": {
+      "status": "completed",
+      "completed_at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "status",
+       "displayName": "status",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "completed_at",
+       "displayName": "completed_at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   },
+   "alwaysOutputData": true
+  },
+  {
+   "id": "8ab658e1-93c0-4c85-9ec2-74649e6134a2",
+   "name": "Log Forms Completed",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -512,
+    2320
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "insert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "matchingColumns": [],
+     "value": {
+      "event": "forms_completed",
+      "phone": "={{ $('Normalize Form Complete').item.json.phone }}",
+      "detail": "={{ $('Normalize Form Complete').item.json.ref }}",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "18d9fe2d-7290-4400-a0d8-9bf4ee39bccf",
+   "name": "Stage Forms Thanks",
+   "type": "n8n-nodes-base.set",
+   "typeVersion": 3.4,
+   "position": [
+    -288,
+    2320
+   ],
+   "parameters": {
+    "mode": "manual",
+    "includeOtherFields": false,
+    "assignments": {
+     "assignments": [
+      {
+       "id": "ft-1",
+       "name": "phone",
+       "value": "={{ $('Normalize Form Complete').item.json.phone }}",
+       "type": "string"
+      },
+      {
+       "id": "ft-2",
+       "name": "sms_text",
+       "value": "Got your forms - you are all set for your visit. See you soon!",
+       "type": "string"
+      },
+      {
+       "id": "ft-3",
+       "name": "event",
+       "value": "forms_thanks",
+       "type": "string"
+      }
+     ]
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "055588e7-78bd-4af6-8fd3-e686132f3cc0",
+   "name": "Payment Webhook",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2.1,
+   "position": [
+    -1184,
+    2520
+   ],
+   "parameters": {
+    "httpMethod": "POST",
+    "path": "ortho-payment-received",
+    "options": {}
+   }
+  },
+  {
+   "id": "db25b6eb-874b-451c-b188-b56b7ad60758",
+   "name": "Normalize Payment",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    -960,
+    2520
+   ],
+   "parameters": {
+    "mode": "runOnceForAllItems",
+    "language": "javaScript",
+    "jsCode": "const j = $input.first().json;\nconst b = j.body || j || {};\nreturn [{ json: {\n  phone: b.phone || b.From || '',\n  amount: String(b.amount || ''),\n  ref: b.reference || b.ref || 'payment'\n} }];"
+   }
+  },
+  {
+   "id": "acb60b2c-d4f7-4474-92d9-100cbb09f7e4",
+   "name": "Log Payment Received",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -736,
+    2520
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "insert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "matchingColumns": [],
+     "value": {
+      "event": "payment_received",
+      "phone": "={{ $('Normalize Payment').item.json.phone }}",
+      "detail": "={{ '$' + $('Normalize Payment').item.json.amount + ' ref ' + $('Normalize Payment').item.json.ref }}",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "90ad8e08-3647-4b24-8635-8297a2ab5fa4",
+   "name": "Stage Payment Receipt",
+   "type": "n8n-nodes-base.set",
+   "typeVersion": 3.4,
+   "position": [
+    -512,
+    2520
+   ],
+   "parameters": {
+    "mode": "manual",
+    "includeOtherFields": false,
+    "assignments": {
+     "assignments": [
+      {
+       "id": "pr-1",
+       "name": "phone",
+       "value": "={{ $('Normalize Payment').item.json.phone }}",
+       "type": "string"
+      },
+      {
+       "id": "pr-2",
+       "name": "sms_text",
+       "value": "={{ 'Payment received - thank you! Confirmation: ' + $('Normalize Payment').item.json.ref }}",
+       "type": "string"
+      },
+      {
+       "id": "pr-3",
+       "name": "event",
+       "value": "payment_receipt",
+       "type": "string"
+      }
+     ]
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "f9b99889-775d-4d54-98b1-5541f307a8c1",
+   "name": "Get Pending Forms",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -960,
+    2220
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_forms"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "status",
+       "condition": "eq",
+       "keyValue": "pending"
+      }
+     ]
+    },
+    "returnAll": true
+   },
+   "alwaysOutputData": true,
+   "executeOnce": true
+  },
+  {
+   "id": "22a89191-9619-48de-9dff-1d7373c38998",
+   "name": "Get Form Reminder Events",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -752,
+    2220
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "event",
+       "condition": "eq",
+       "keyValue": "form_reminder_sent"
+      }
+     ]
+    },
+    "returnAll": true
+   },
+   "alwaysOutputData": true,
+   "executeOnce": true
+  },
+  {
+   "id": "053fa708-3306-4bd0-958d-e8ee9bc067b0",
+   "name": "Sweep Form Chases",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    -544,
+    2220
+   ],
+   "parameters": {
+    "mode": "runOnceForAllItems",
+    "language": "javaScript",
+    "jsCode": "const pending = $('Get Pending Forms').all().map(i => i.json).filter(r => r.phone && r.status === 'pending');\nconst reminded = new Set($('Get Form Reminder Events').all().map(i => i.json.phone).filter(Boolean));\nconst out = [];\nfor (const f of pending) {\n  const sent = f.sent_at ? new Date(f.sent_at) : null;\n  if (!sent || isNaN(sent.getTime())) continue;\n  const ageH = ($now.toMillis() - sent.getTime()) / 3.6e6;\n  if (ageH >= 20 && !reminded.has(f.phone)) {\n    out.push({ json: { phone: f.phone, sms_text: 'Quick reminder from Harborline Orthodontics - your new-patient forms take 5 minutes and save you time at your visit: ' + (f.form_link || ''), event: 'form_reminder_sent', detail: f.phone } });\n  }\n}\nreturn out;"
+   }
+  },
+  {
+   "id": "877ff0c8-f62b-4b61-83fa-9d3be63dc66e",
+   "name": "Log Form Reminder",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -336,
+    2220
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "insert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "name",
+     "value": "ortho_events"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "matchingColumns": [],
+     "value": {
+      "event": "form_reminder_sent",
+      "phone": "={{ $json.phone }}",
+      "detail": "={{ $json.detail }}",
+      "at": "={{ $now.toISO() }}"
+     },
+     "schema": [
+      {
+       "id": "event",
+       "displayName": "event",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "phone",
+       "displayName": "phone",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "detail",
+       "displayName": "detail",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "at",
+       "displayName": "at",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "11288fe1-7cb9-4c2a-9f2d-44a918c5378e",
+   "name": "Stage Form Reminder",
+   "type": "n8n-nodes-base.set",
+   "typeVersion": 3.4,
+   "position": [
+    -128,
+    2220
+   ],
+   "parameters": {
+    "mode": "manual",
+    "includeOtherFields": false,
+    "assignments": {
+     "assignments": [
+      {
+       "id": "fr-1",
+       "name": "phone",
+       "value": "={{ $('Sweep Form Chases').item.json.phone }}",
+       "type": "string"
+      },
+      {
+       "id": "fr-2",
+       "name": "sms_text",
+       "value": "={{ $('Sweep Form Chases').item.json.sms_text }}",
+       "type": "string"
+      },
+      {
+       "id": "fr-3",
+       "name": "event",
+       "value": "form_reminder_sent",
+       "type": "string"
+      }
+     ]
+    },
+    "options": {}
+   }
+  }
+ ],
+ "connections": {
+  "Save Conversation (texted)": {
+   "main": [
+    [
+     {
+      "node": "Log Missed Call",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Log Missed Call": {
+   "main": [
+    [
+     {
+      "node": "Compose Text-Back",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Compose Text-Back": {
+   "main": [
+    [
+     {
+      "node": "Send Mode: live?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Send Mode: live?": {
+   "main": [
+    [
+     {
+      "node": "Send SMS (Twilio)",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Log SMS Simulated",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Send SMS (Twilio)": {
+   "main": [
+    [
+     {
+      "node": "Log SMS Sent",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Opt-Out?": {
+   "main": [
+    [
+     {
+      "node": "Record Opt-Out",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Load Conversation",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Record Opt-Out": {
+   "main": [
+    [
+     {
+      "node": "Log Opt-Out",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Load Conversation": {
+   "main": [
+    [
+     {
+      "node": "Known Conversation?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Known Conversation?": {
+   "main": [
+    [
+     {
+      "node": "Route by State",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Queue Cold Inbound",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Route by State": {
+   "main": [
+    [
+     {
+      "node": "Classify Reply",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Parse Slot Choice",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Classify Reply",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Append to Queue",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Classify Reply": {
+   "main": [
+    [
+     {
+      "node": "Get Open Slots",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Queue for Callback",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "FAQ Facts",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Parse Resched Intent",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Queue for Callback",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Local Model (LM Studio)": {
+   "ai_languageModel": [
+    [
+     {
+      "node": "Classify Reply",
+      "type": "ai_languageModel",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Parse Slot Choice": {
+   "main": [
+    [
+     {
+      "node": "Choice Matched?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Choice Matched?": {
+   "main": [
+    [
+     {
+      "node": "Book Slot",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Queue for Callback",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Log Booking": {
+   "main": [
+    [
+     {
+      "node": "Mark Booked",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Stage Booking Confirm": {
+   "main": [
+    [
+     {
+      "node": "Send Mode: live?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Queue for Callback": {
+   "main": [
+    [
+     {
+      "node": "Log Queued",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Append to Queue": {
+   "main": [
+    [
+     {
+      "node": "Log Inbound Message",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Queue Cold Inbound": {
+   "main": [
+    [
+     {
+      "node": "Log Cold Inbound",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Get Open Slots": {
+   "main": [
+    [
+     {
+      "node": "Compose Slot Offer",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Compose Slot Offer": {
+   "main": [
+    [
+     {
+      "node": "Slots Available?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Slots Available?": {
+   "main": [
+    [
+     {
+      "node": "Mark Offered",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Queue for Callback",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Mark Offered": {
+   "main": [
+    [
+     {
+      "node": "Stage Offer SMS",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Stage Offer SMS": {
+   "main": [
+    [
+     {
+      "node": "Send Mode: live?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Log Queued": {
+   "main": [
+    [
+     {
+      "node": "Mark Queued",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Mark Queued": {
+   "main": [
+    [
+     {
+      "node": "Stage Queue Confirm",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Stage Queue Confirm": {
+   "main": [
+    [
+     {
+      "node": "Send Mode: live?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Owner Digest 7AM": {
+   "main": [
+    [
+     {
+      "node": "Get Recent Events",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Get Recent Events": {
+   "main": [
+    [
+     {
+      "node": "Build Digest",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Build Digest": {
+   "main": [
+    [
+     {
+      "node": "Send Owner Digest",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Send Owner Digest": {
+   "main": [
+    [
+     {
+      "node": "Log Digest Sent",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Missed Call Webhook": {
+   "main": [
+    [
+     {
+      "node": "Normalize Missed Call",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Normalize Missed Call": {
+   "main": [
+    [
+     {
+      "node": "Save Conversation (texted)",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Inbound SMS Webhook": {
+   "main": [
+    [
+     {
+      "node": "Normalize Inbound",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Normalize Inbound": {
+   "main": [
+    [
+     {
+      "node": "Admin Check",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Admin Check": {
+   "main": [
+    [
+     {
+      "node": "Is Admin?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Is Admin?": {
+   "main": [
+    [
+     {
+      "node": "Admin Command Parse",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Has Media?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Admin Command Parse": {
+   "main": [
+    [
+     {
+      "node": "Admin Relay?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Admin Relay?": {
+   "main": [
+    [
+     {
+      "node": "Log Admin Relay",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Log Admin Question",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Log Admin Relay": {
+   "main": [
+    [
+     {
+      "node": "Stage Relay SMS",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Stage Relay SMS": {
+   "main": [
+    [
+     {
+      "node": "Send Mode: live?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Ctx Conversations": {
+   "main": [
+    [
+     {
+      "node": "Ctx Queue",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Ctx Queue": {
+   "main": [
+    [
+     {
+      "node": "Ctx Events",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Ctx Events": {
+   "main": [
+    [
+     {
+      "node": "Ctx Slots",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Assemble Admin Context": {
+   "main": [
+    [
+     {
+      "node": "Admin Brain",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Admin Model": {
+   "ai_languageModel": [
+    [
+     {
+      "node": "Admin Brain",
+      "type": "ai_languageModel",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Admin Memory": {
+   "ai_memory": [
+    [
+     {
+      "node": "Admin Brain",
+      "type": "ai_memory",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Admin Brain": {
+   "main": [
+    [
+     {
+      "node": "Stage Admin Reply",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Stage Admin Reply": {
+   "main": [
+    [
+     {
+      "node": "Send Mode: live?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Ctx Slots": {
+   "main": [
+    [
+     {
+      "node": "Ctx Practice Facts",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Ctx Practice Facts": {
+   "main": [
+    [
+     {
+      "node": "Assemble Admin Context",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Book Slot": {
+   "main": [
+    [
+     {
+      "node": "Booking Succeeded?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Booking Succeeded?": {
+   "main": [
+    [
+     {
+      "node": "Log Booking",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Get Open Slots",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Log Admin Question": {
+   "main": [
+    [
+     {
+      "node": "Ctx Conversations",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Has Media?": {
+   "main": [
+    [
+     {
+      "node": "Queue Photo Review",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Opt-Out?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Queue Photo Review": {
+   "main": [
+    [
+     {
+      "node": "Log Photo Received",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Log Photo Received": {
+   "main": [
+    [
+     {
+      "node": "Stage Photo Ack",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Stage Photo Ack": {
+   "main": [
+    [
+     {
+      "node": "Send Mode: live?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "FAQ Facts": {
+   "main": [
+    [
+     {
+      "node": "FAQ Match",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "FAQ Match": {
+   "main": [
+    [
+     {
+      "node": "FAQ Matched?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "FAQ Matched?": {
+   "main": [
+    [
+     {
+      "node": "Log FAQ Answer",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Queue for Callback",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Log FAQ Answer": {
+   "main": [
+    [
+     {
+      "node": "Stage FAQ Answer",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Stage FAQ Answer": {
+   "main": [
+    [
+     {
+      "node": "Send Mode: live?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Parse Resched Intent": {
+   "main": [
+    [
+     {
+      "node": "Find My Booking",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Find My Booking": {
+   "main": [
+    [
+     {
+      "node": "Has Booking?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Has Booking?": {
+   "main": [
+    [
+     {
+      "node": "Free Slot",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Queue for Callback",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Free Slot": {
+   "main": [
+    [
+     {
+      "node": "Log Cancelled",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Log Cancelled": {
+   "main": [
+    [
+     {
+      "node": "Cancel or Resched?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Cancel or Resched?": {
+   "main": [
+    [
+     {
+      "node": "Mark Conv Texted",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Get Open Slots",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Mark Conv Texted": {
+   "main": [
+    [
+     {
+      "node": "Stage Cancel Confirm",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Stage Cancel Confirm": {
+   "main": [
+    [
+     {
+      "node": "Send Mode: live?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Hourly Sweeps": {
+   "main": [
+    [
+     {
+      "node": "Get Booked Slots",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Get Offered Convs",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Get Pending Forms",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Get Booked Slots": {
+   "main": [
+    [
+     {
+      "node": "Get Reminder Events",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Get Reminder Events": {
+   "main": [
+    [
+     {
+      "node": "Sweep Reminders",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Sweep Reminders": {
+   "main": [
+    [
+     {
+      "node": "Log Reminder",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Log Reminder": {
+   "main": [
+    [
+     {
+      "node": "Stage Reminder",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Stage Reminder": {
+   "main": [
+    [
+     {
+      "node": "Send Mode: live?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Get Offered Convs": {
+   "main": [
+    [
+     {
+      "node": "Get Nudge Events",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Get Nudge Events": {
+   "main": [
+    [
+     {
+      "node": "Sweep Nudges",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Sweep Nudges": {
+   "main": [
+    [
+     {
+      "node": "Nudge Action?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Nudge Action?": {
+   "main": [
+    [
+     {
+      "node": "Log Nudge",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Expire To Queue",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Log Nudge": {
+   "main": [
+    [
+     {
+      "node": "Stage Nudge",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Stage Nudge": {
+   "main": [
+    [
+     {
+      "node": "Send Mode: live?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Expire To Queue": {
+   "main": [
+    [
+     {
+      "node": "Expire Mark Queued",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Expire Mark Queued": {
+   "main": [
+    [
+     {
+      "node": "Log Expired",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Mark Booked": {
+   "main": [
+    [
+     {
+      "node": "Track Forms Pending",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Track Forms Pending": {
+   "main": [
+    [
+     {
+      "node": "Stage Booking Confirm",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Form Complete Webhook": {
+   "main": [
+    [
+     {
+      "node": "Normalize Form Complete",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Normalize Form Complete": {
+   "main": [
+    [
+     {
+      "node": "Mark Form Complete",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Mark Form Complete": {
+   "main": [
+    [
+     {
+      "node": "Log Forms Completed",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Log Forms Completed": {
+   "main": [
+    [
+     {
+      "node": "Stage Forms Thanks",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Stage Forms Thanks": {
+   "main": [
+    [
+     {
+      "node": "Send Mode: live?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Payment Webhook": {
+   "main": [
+    [
+     {
+      "node": "Normalize Payment",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Normalize Payment": {
+   "main": [
+    [
+     {
+      "node": "Log Payment Received",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Log Payment Received": {
+   "main": [
+    [
+     {
+      "node": "Stage Payment Receipt",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Stage Payment Receipt": {
+   "main": [
+    [
+     {
+      "node": "Send Mode: live?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Get Pending Forms": {
+   "main": [
+    [
+     {
+      "node": "Get Form Reminder Events",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Get Form Reminder Events": {
+   "main": [
+    [
+     {
+      "node": "Sweep Form Chases",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Sweep Form Chases": {
+   "main": [
+    [
+     {
+      "node": "Log Form Reminder",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Log Form Reminder": {
+   "main": [
+    [
+     {
+      "node": "Stage Form Reminder",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Stage Form Reminder": {
+   "main": [
+    [
+     {
+      "node": "Send Mode: live?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  }
+ }
 }
