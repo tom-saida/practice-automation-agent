@@ -38,24 +38,32 @@ Every fact in that answer traces to a table row. Ask it something the data can't
 
 ```
 workflow/practice-front-office-agent.json   the n8n workflow (import this)
+scripts/setup-instance.mjs                  create + seed the six data tables on a fresh instance
 demo/flow-demo.html                         interactive flow visualization (open in a browser)
 seed/practice_facts.json                    fictional practice config (insurance, hours, fees, policies)
 seed/slots.json                             demo consult slots
+seed/admins.json                            allowlisted admin/owner number(s) for the admin lane
 docs/voice-roadmap.md                       the voice layer design (STT/LLM/TTS)
 ```
 
 ## Run it
 
 1. n8n 1.x (self-hosted or cloud — for anything real, self-hosted per [n8n-hipaa-stack](../n8n-hipaa-stack)).
-2. Create six **data tables** (instance-level, not part of workflow import):
+2. Create six **data tables** — instance-level, *not* part of the workflow import (the workflow's Data Table nodes reference them by name, so matching names is all the wiring the import needs). Fastest is the setup script, which creates all six and seeds the three static ones in one shot:
+   ```bash
+   # Node 18+. API key from the target instance: Settings → n8n API → Create API key.
+   N8N_URL=https://YOUR-N8N N8N_API_KEY=xxxxx node scripts/setup-instance.mjs
+   # add --with-workflow to also import the workflow JSON in the same run
+   ```
+   To create them by hand instead (n8n auto-adds id/createdAt/updatedAt):
    - `ortho_conversations` (phone, state, patient_type, last_message, offered_slots, updated_at — all string)
    - `ortho_slots` (slot_label string, taken boolean, booked_by, booked_at string)
    - `ortho_queue` (phone, reason, context, status, created_at — string)
    - `ortho_events` (event, phone, detail, at — string)
    - `ortho_admins` (phone, name, role — string)
    - `ortho_practice_facts` (category, key, value — string)
-3. Seed `ortho_practice_facts` and `ortho_slots` from `seed/`, and put a test number in `ortho_admins`.
-4. Import the workflow JSON, attach your credentials (any OpenAI-compatible model, Twilio, Gmail), publish.
+3. Seed `ortho_practice_facts`, `ortho_slots`, and `ortho_admins` from `seed/` (the setup script already did this — skip if you used it).
+4. Import the workflow JSON (skip if you used `--with-workflow`), attach your credentials (any OpenAI-compatible model, Twilio, Gmail), publish.
 5. Test with curl — safe, the send gate ships in simulate mode:
    ```bash
    # a missed call
@@ -80,6 +88,6 @@ docs/voice-roadmap.md                       the voice layer design (STT/LLM/TTS)
 
 ## Status
 
-Core lifecycle live-tested (missed call → text-back → AI triage → slot offer → booking → STOP compliance; admin QA + relay; cold-inbound regression). Roadmap: reschedule/cancel intents, urgent-triage lane with photo capture, recall sweeps, payment links, and the voice front door (see `docs/voice-roadmap.md`).
+Core lifecycle live-tested (missed call → text-back → AI triage → slot offer → booking → STOP compliance; admin QA + relay; cold-inbound regression; existing-patient and question lanes; scheduled digest verified in production). **Race-tested:** two patients offered the same slot both replying "1" — the loser is detected (`taken=false` guard on the booking update) and gracefully re-offered the remaining slots instead of silently overwriting the winner's booking. Roadmap: reschedule/cancel intents, urgent-triage lane with photo capture, recall sweeps, payment links, and the voice front door (see `docs/voice-roadmap.md`).
 
 MIT licensed. Built with n8n's workflow SDK, driven by an AI-assisted development loop — every path in this repo was exercised against a live instance before it shipped.
